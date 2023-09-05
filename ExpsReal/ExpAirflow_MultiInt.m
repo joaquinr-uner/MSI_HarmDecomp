@@ -1,9 +1,10 @@
-addpath(genpath('/home/sentey/Dropbox/Github'))
-addpath(genpath('/home/jruiz'))
-drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/TIDIS/Señales Separadas/Flow_DR';
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Airflow3';
-%drt = 'Flow_DR';
-%drt_r = 'Results/Flow_DR';
+% Add path to harmonic_imputation toolbox
+
+drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/Flow_DR'; % Data Directory
+
+drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Airflow'; % Result Directory
+
+files = dir(drt);
 
 severity = 'Normal';
 files = dir([drt '/' severity]);
