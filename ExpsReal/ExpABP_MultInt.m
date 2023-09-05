@@ -1,19 +1,22 @@
-addpath(genpath('/home/sentey/Dropbox/Github'))
-addpath(genpath('/home/jruiz'))
-drt = '/media/Datos/joaquinruiz/CHARIS';
-%drt = 'E:\CHARIS';
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/CHARIS2';
+% Add path to harmonic_imputation toolbox
+
+drt = '/media/Datos/joaquinruiz/CHARIS'; % Data Directory
+
+drt_r = '/media/Datos/joaquinruiz/MissingDataReal/CHARIS2'; % Result Directory
+
 files = dir(drt);
 
-%startindex = readmatrix(fullfile(drt,'CHARIS_Indexes.csv'));
 load(fullfile(drt,'CHARIS_Indexes.mat'));
 files = files(5:end);
 J = length(files);
 ratio = [0.05:0.05:0.2];
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT'];
+
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
+
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
+
 NE = size(ErrorCrit,2);
 NM = length(ImpMethods);
 %ImpMethods = {'TLM','LSE','DMD'};
@@ -49,9 +52,9 @@ for j=1:J
     p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
     p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-    p_ddtfa = struct('fs',fs);
+    p_ddtfa = struct('fs',fs
     
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_edmd,p_lsw};
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};
     
     for m=1:3
         ini = startindex(j,m);
