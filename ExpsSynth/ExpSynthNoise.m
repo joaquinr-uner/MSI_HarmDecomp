@@ -1,18 +1,18 @@
-#addpath(genpath('/home/sentey/Dropbox/Github'))
-# Add Path to harmonic_imputation toolbox
-# addpath(genpath(...))
-
-            N = 4000;
-            sigma = 1e-4;
-            fs = 4000;
-            fmax = 0.5;
-            T = N/fs;
-            redun = 1;
-            b = round(3/pi*sqrt(sigma/2)*N);
+% Add path to harmonic_imputation toolbox
+addpath(genpath('C:\Users\Intel\Dropbox\Github\harmonic_imputation'))
+N = 4000;
+sigma = 1e-4;
+fs = 4000;
+fmax = 0.5;
+T = N/fs;
+redun = 1;
+b = round(3/pi*sqrt(sigma/2)*N);
 ratio = [0.05:0.05:0.2];
 J = 100;
 ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA','EDMD','LSW'};
 ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA';'EDD';'LSW'];
+ImpMethods = {'TLM'};
+ImpNames = ['TLM'];
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
@@ -151,7 +151,6 @@ for l=1:length(vSNR)
             Errj_Imp = zeros(NM,NE);
             Errj_Spl = zeros(NM,NE);
             Errj_Pch = zeros(NM,NE);
-            Errj_Lin = zeros(NM,NE);
 
             times_hdecomp = zeros(NM,1);times_splj = zeros(NM,1);
             times_pchj = zeros(NM,1);times_linj = zeros(NM,1);
@@ -172,7 +171,6 @@ for l=1:length(vSNR)
 
                     Errj_Spl(k,:) = NaN;
                     Errj_Pch(k,:) = NaN;
-                    Errj_Lin(k,:) = NaN;
 
                     t_hdecomp = NaN;
                     t_spl = NaN;
@@ -187,23 +185,15 @@ for l=1:length(vSNR)
                     [sk_pch,~,ADpch,phiDpch] = harm_int(ADk,phiDk,sth,Lh,'pchip',sk);
                     t_pch = toc;
                     Errj_Pch(k,:) = compute_errors(trc,sk_pch,sth,Lh,ErrorCrit);
-
-                    tic
-                    [sk_lin,~,ADlin,phiDlin] = harm_int(ADk,phiDk,sth,Lh,'lin',sk);
-                    t_lin = toc;
-                    Errj_Lin(k,:) = compute_errors(trc,sk_lin,sth,Lh,ErrorCrit);
-
                 end
                 Sj_Imp(k,:) = sk;
                 Sj_Spl(k,:) = sk_spl;
                 Sj_Pch(k,:) = sk_pch;
-                Sj_Lin(k,:) = sk_lin;
                 R_opt(k) = r_optjk;
 
                 times_hdecomp(k) = t_hdecomp;
                 times_splj(k) = t_spl;
                 times_pchj(k) = t_pch;
-                times_linj(k) = t_lin;
             end
 
             VL(j,:) = Lh;
@@ -214,14 +204,12 @@ for l=1:length(vSNR)
             S_Imp(j,:,:) = Sj_Imp;
             S_Spl(j,:,:) = Sj_Spl;
             S_Pch(j,:,:) = Sj_Pch;
-            S_Lin(j,:,:) = Sj_Lin;
 
             r_opt(j,:) = R_opt;
 
             Err_Imp(j,:,:) = Errj_Imp;
             Err_Spl(j,:,:) = Errj_Spl;
             Err_Pch(j,:,:) = Errj_Pch;
-            Err_Lin(j,:,:) = Errj_Lin;
 
             [~,BestI(j,:)] = min(Errj_Imp(:,1));
 
@@ -229,22 +217,19 @@ for l=1:length(vSNR)
 
             [~,BestP(j,:)] = min(Errj_Pch(:,1));
 
-            [~,BestL(j,:)] = min(Errj_Lin(:,1));
-
             fprintf(['Best Imputation Method: ' ImpMethods{BestI(j,:)} '. Best Imputation+Pchip_Interp Method: ' ImpMethods{BestP(j,:)} '\n'])
             Times_Imp(j,:) = times_impj;
             Times_Decomp(j,:) = times_hdecomp;
             Times_Spl(j,:) = times_splj;
             Times_Pch(j,:) = times_pchj;
-            Times_Lin(j,:) = times_linj;
         end
 
-        S = struct('Err_Imp',Err_Imp,'Err_Spl',Err_Spl,'Err_Pch',Err_Pch,'Err_Lin',...
-            Err_Lin,'True',TRUE,'TrueN',TRUEN,'S_MS',S_MS,'VL',VL,'St',St,'S_Imp',S_Imp,...
-            'S_Spl',S_Spl,'S_Pch',S_Pch,'S_Lin',S_Lin,'ImpNames',ImpNames, ...
+        S = struct('Err_Imp',Err_Imp,'Err_Spl',Err_Spl,'Err_Pch',Err_Pch,...
+            'True',TRUE,'TrueN',TRUEN,'S_MS',S_MS,'VL',VL,'St',St,'S_Imp',S_Imp,...
+            'S_Spl',S_Spl,'S_Pch',S_Pch,'ImpNames',ImpNames, ...
             'Metrics',ErrorNames,'Times_Imp',Times_Imp,'Times_Decomp',Times_Decomp,...
             'Times_Spl',Times_Spl,'Times_Pch',Times_Pch,...
-            'Times_Lin',Times_Lin,'BestI',BestI,'BestS',BestS,'BestP',BestP,...
+            'BestI',BestI,'BestS',BestS,'BestP',BestP,...
             'BestL',BestL);
         save(['Results_MissingDataMultiInt_' num2str(L) '_' num2str(vSNR(l)) '.mat'],'S')
     end
