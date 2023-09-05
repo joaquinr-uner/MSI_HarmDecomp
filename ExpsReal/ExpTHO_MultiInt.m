@@ -109,11 +109,12 @@ for j=1:J
         s(st1:ed1) = 0;
         s(st2:ed2) = 0;
         s(st3:ed3) = 0;
+        
         fprintf('Interv 1: %i-%i. Interv2: %i-%i. Interv3: %i-%i  \n',st1,ed1,st2,ed2,st3,ed3)
         [sth,Lh] = missing_ints(s,struct('c','x','d',0.01*fs,'t',0));
         edh = sth + Lh - 1;
         fprintf('Starting imputation step...\n')
-        %s_imp = impute(s,sth,Lh,ImpMethods,params_imp);
+
         warning('off','all')
         [s_imp,times_impj] = impute(s,sth,Lh,ImpMethods,params_imp,1);
         warning('on','all')
