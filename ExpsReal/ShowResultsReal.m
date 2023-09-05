@@ -3,190 +3,191 @@ addpath(genpath('C:\Users\Intel\Dropbox\Github'))
 addpath(genpath('/home/jruiz'))
 severity = 'Normal';
 
-Signals = {'Plethysmogram2','Airflow2','NasalPressure2','Thorax'};
-Labels = {'PPG','AF','NP','THO'};
-K = length(Signals);
+SName = {'Plethysmogram/Normal','CHARIS','Accelerometry','Airflow/Normal','NasalPressure/Normal','Thorax/Normal'};
+Labels = {'PPG','ABP','ACC','AF','NP','THO'};
+K = length(SName);
 
 ratio = 0.05:0.05:0.2;
 Nl = length(ratio);
 ratio_s = {'5%','10%','15%','20%'};
 alpha_b = 0.05/3;
 
-pvalmse_ip = zeros(Nl,K);
-pvalmse_is = zeros(Nl,K);
-pvalmse_sp = zeros(Nl,K);
-pvalmse_il = zeros(Nl,K);
-pvalmse_sl = zeros(Nl,K);
-pvalmse_pl = zeros(Nl,K);
-hvalmse_ip = zeros(Nl,K);
-hvalmse_is = zeros(Nl,K);
-hvalmse_sp = zeros(Nl,K);
-hvalmse_il = zeros(Nl,K);
-hvalmse_sl = zeros(Nl,K);
-hvalmse_pl = zeros(Nl,K);
+PVAL_BIP = zeros(K,Nl);
+PVAL_BIS = zeros(K,Nl);
+PVAL_BSP = zeros(K,Nl);
+HVAL_BIP = zeros(K,Nl);
+HVAL_BIS = zeros(K,Nl);
+HVAL_BSP = zeros(K,Nl);
+MED_IB = zeros(K,Nl);
+MED_SB = zeros(K,Nl);
+MED_PB = zeros(K,Nl);
+YLim = [0 0.32; 0 0.37; 0 0.28; 0 0.75; 0 0.37; 0 0.40];
+LabX = 0.75*ones(1,6);
+LabY = [0.29, 0.335, 0.25, 0.69, 0.335, 0.36];
+LabX2 = 8.5*ones(1,6);
+LabY2 = [55 64 37 27.5 27.5 37];
 
-pvalmae_ip = zeros(Nl,K);
-pvalmae_is = zeros(Nl,K);
-pvalmae_sp = zeros(Nl,K);
-pvalmae_il = zeros(Nl,K);
-pvalmae_sl = zeros(Nl,K);
-pvalmae_pl = zeros(Nl,K);
-hvalmae_ip = zeros(Nl,K);
-hvalmae_is = zeros(Nl,K);
-hvalmae_sp = zeros(Nl,K);
-hvalmae_il = zeros(Nl,K);
-hvalmae_sl = zeros(Nl,K);
-hvalmae_pl = zeros(Nl,K);
-
-medmse_i = zeros(Nl,K);
-medmse_p = zeros(Nl,K);
-medmse_s = zeros(Nl,K);
-medmse_l = zeros(Nl,K);
-iqrmse_i = zeros(Nl,K);
-iqrmse_p = zeros(Nl,K);
-iqrmse_s = zeros(Nl,K);
-iqrmse_l = zeros(Nl,K);
-
-medmae_i = zeros(Nl,K);
-medmae_p = zeros(Nl,K);
-medmae_s = zeros(Nl,K);
-medmae_l = zeros(Nl,K);
-iqrmae_i = zeros(Nl,K);
-iqrmae_p = zeros(Nl,K);
-iqrmae_s = zeros(Nl,K);
-iqrmae_l = zeros(Nl,K);
-
-NM = 6;
+PosB = [0.11 0.64 0.25 0.26;
+        0.40 0.64 0.25 0.26;
+        0.69 0.64 0.25 0.26;
+        0.11 0.31 0.25 0.26;
+        0.40 0.31 0.25 0.26;
+        0.69 0.31 0.25 0.26;];
 for k=1:K
-    signal = Signals{k};
+    sname = SName{k};
     label = Labels{k};
-    
     %drt_r = ['E:\MissingDataReal\' signal];
-    drt_r = ['/media/Datos/joaquinruiz/MissingDataReal/' signal];
-    files_r = dir(fullfile(drt_r,severity));
-    
+    drt_r = ['/media/Datos/joaquinruiz/MissingDataReal/' sname];
+    files_r = dir(fullfile(drt_r));
     files_r = files_r(3:end);
-    
+
     J = length(files_r);
-    TMSE_Best = zeros(Nl,J);
-    TMSE_Spl = zeros(Nl,J);
-    TMSE_Pch = zeros(Nl,J);
-    TMSE_Lin = zeros(Nl,J);
-    TMAE_Best = zeros(Nl,J);
-    TMAE_Spl = zeros(Nl,J);
-    TMAE_Pch = zeros(Nl,J);
-    TMAE_Lin = zeros(Nl,J);
-    
-    name_r = files_r(1).name;
-    load(fullfile(drt_r,severity,name_r))
-    
-    N = size(St.True,2);
-    S_IMP = zeros(J,Nl,N);
+
+    load(fullfile(drt_r,files_r(1).name))
+    ratio = 0.05:0.05:0.2;
+    Nl = length(ratio);
+    ErrorCrit = upper(cellstr(St.Metrics));
+    Ei = 1;
+    ImpNames = cellstr(St.ImpNames);
+    NM = size(ImpNames,1);
+    err_imp = zeros(J,Nl,NM);
+    err_spl = zeros(J,Nl,NM);
+    err_pch = zeros(J,Nl,NM);
+    err_lin = zeros(J,Nl,NM);
+
+    ratio_s = {'0.5','0.1','0.15','0.2'};
+    alpha_b = 0.05/3;
+    pval_ip = zeros(Nl,1);pval_is = zeros(Nl,1);pval_sp = zeros(Nl,1);
+    pval_il = zeros(Nl,1);pval_sl = zeros(Nl,1);pval_pl = zeros(Nl,1);
+    hval_ip = zeros(Nl,1);hval_is = zeros(Nl,1);hval_sp = zeros(Nl,1);
+    hval_il = zeros(Nl,1);hval_sl = zeros(Nl,1);hval_pl = zeros(Nl,1);
+
+    times_imp = zeros(Nl,NM);times_decomp = times_imp; times_pch = times_imp;
+    times_spl = times_imp; times_lin = times_imp;
+
+    best_err_imp = zeros(J,1); best_err_spl = best_err_imp; best_err_pch = best_err_imp;
+
+    med_ib = zeros(Nl,1); med_sb = med_ib; med_pb = med_ib;
+    pval_bip = zeros(Nl,1); pval_bis = zeros(Nl,1); pval_bsp = zeros(Nl,1);
+    hval_bip = zeros(Nl,1); hval_bis = zeros(Nl,1); hval_bsp = zeros(Nl,1);
+
+    med_i = zeros(Nl,NM);
+    med_p = zeros(Nl,NM);
+    med_s = zeros(Nl,NM);
+    med_l = zeros(Nl,NM);
+    iqr_i = zeros(Nl,NM);
+    iqr_p = zeros(Nl,NM);
+    iqr_s = zeros(Nl,NM);
+    iqr_l = zeros(Nl,NM);
+
+    best_i = zeros(Nl,J);
+    best_s = zeros(Nl,J);
+    best_p = zeros(Nl,J);
+    best_l = zeros(Nl,J);
+
+    N = 12e3;
+    Signals = zeros(J,Nl,N);
     True = zeros(J,Nl,N);
     S_Spl = zeros(J,Nl,N);
     S_Pch = zeros(J,Nl,N);
-    BestM = zeros(Nl,J);
 
+    Err_Imp = zeros(Nl,J);
+    Err_Spl = zeros(Nl,J);
+    Err_Pch = zeros(Nl,J);
     for j=1:J
         name_r = files_r(j).name;
-        load(fullfile(drt_r,severity,name_r))
-        
-        if size(St.True,1)==Nl
-            True(j,:,:) = St.True;
-            S_IMP(j,:,:) = St.S_Imp;
-            S_Spl(j,:,:) = St.S_Spl;
-            S_Pch(j,:,:) = St.S_Pch;
-            TMSE_Best(:,j) = St.TMSE_Best/(max(St.True(:))-min(St.True(:)))^2;
-            TMSE_Spl(:,j) = St.TMSE_Spl/(max(St.True(:))-min(St.True(:)))^2;
-            TMSE_Pch(:,j) = St.TMSE_Pch/(max(St.True(:))-min(St.True(:)))^2;
-            TMSE_Lin(:,j) = St.TMSE_Lin/(max(St.True(:))-min(St.True(:)));
-            TMAE_Best(:,j) = St.TMAE_Best/(max(St.True(:))-min(St.True(:)));
-            TMAE_Spl(:,j) = St.TMAE_Spl/(max(St.True(:))-min(St.True(:)));
-            TMAE_Pch(:,j) = St.TMAE_Pch/(max(St.True(:))-min(St.True(:)));
-            TMAE_Lin(:,j) = St.TMAE_Lin/(max(St.True(:))-min(St.True(:)));
+        load(fullfile(drt_r,name_r))
 
-            BestM(:,j) = St.BestM;
-        else
+        err_imp(j,:,:) = St.Err_Imp(:,:,Ei)./max(St.True(1,:));
+        err_spl(j,:,:) = St.Err_Spl(:,:,Ei)./max(St.True(1,:));
+        err_pch(j,:,:) = St.Err_Pch(:,:,Ei)./max(St.True(1,:));
+        err_lin(j,:,:) = St.Err_Lin(:,:,Ei)./max(St.True(1,:));
 
-            True(j,:,:) = St.True(1:2:7,:);
-            S_IMP(j,:,:) = St.S_Imp(1:2:7,:);
-            S_Spl(j,:,:) = St.S_Spl(1:2:7,:);
-            S_Pch(j,:,:) = St.S_Pch(1:2:7,:);
-            TMSE_Best(:,j) = St.TMSE_Best(1:2:7,:)/(max(St.True(:))-min(St.True(:)))^2;
-            TMSE_Spl(:,j) =  St.TMSE_Spl(1:2:7,:)/(max(St.True(:))-min(St.True(:)))^2;
-            TMSE_Pch(:,j) =  St.TMSE_Pch(1:2:7,:)/(max(St.True(:))-min(St.True(:)))^2;
-            TMSE_Lin(:,j) =  St.TMSE_Lin(1:2:7,:)/(max(St.True(:))-min(St.True(:)));
-            TMAE_Best(:,j) = St.TMAE_Best(1:2:7,:)/(max(St.True(:))-min(St.True(:)));
-            TMAE_Spl(:,j) =  St.TMAE_Spl(1:2:7,:)/(max(St.True(:))-min(St.True(:)));
-            TMAE_Pch(:,j) =  St.TMAE_Pch(1:2:7,:)/(max(St.True(:))-min(St.True(:)));
-            TMAE_Lin(:,j) =  St.TMAE_Lin(1:2:7,:)/(max(St.True(:))-min(St.True(:)));
-            BestM(:,j) = St.BestM(1:2:7);
-        end
-    end
-    
-    FrecM = zeros(6,Nl);
-    for i=1:6
-        FrecM(i,:) = sum(BestM==i,2);
     end
 
     for i=1:Nl
-        [pvalmse_ip(i,k),hvalmse_ip(i,k)] = signrank(TMSE_Best(i,:),TMSE_Pch(i,:),'alpha',alpha_b);
-        [pvalmse_is(i,k),hvalmse_is(i,k)] = signrank(TMSE_Best(i,:),TMSE_Spl(i,:),'alpha',alpha_b);
-        [pvalmse_sp(i,k),hvalmse_sp(i,k)] = signrank(TMSE_Spl(i,:),TMSE_Pch(i,:),'alpha',alpha_b);
-        [pvalmse_il(i,k),hvalmse_il(i,k)] = signrank(TMSE_Best(i,:),TMSE_Lin(i,:),'alpha',alpha_b);
-        [pvalmse_sl(i,k),hvalmse_sl(i,k)] = signrank(TMSE_Spl(i,:),TMSE_Lin(i,:),'alpha',alpha_b);
-        [pvalmse_pl(i,k),hvalmse_pl(i,k)] = signrank(TMSE_Pch(i,:),TMSE_Lin(i,:),'alpha',alpha_b);
-        
-        [pvalmae_ip(i,k),hvalmae_ip(i,k)] = signrank(TMAE_Best(i,:),TMAE_Pch(i,:),'alpha',alpha_b);
-        [pvalmae_is(i,k),hvalmae_is(i,k)] = signrank(TMAE_Best(i,:),TMAE_Spl(i,:),'alpha',alpha_b);
-        [pvalmae_sp(i,k),hvalmae_sp(i,k)] = signrank(TMAE_Spl(i,:),TMAE_Pch(i,:),'alpha',alpha_b);
-        [pvalmae_il(i,k),hvalmae_il(i,k)] = signrank(TMAE_Best(i,:),TMAE_Lin(i,:),'alpha',alpha_b);
-        [pvalmae_sl(i,k),hvalmae_sl(i,k)] = signrank(TMAE_Spl(i,:),TMAE_Lin(i,:),'alpha',alpha_b);
-        [pvalmae_pl(i,k),hvalmae_pl(i,k)] = signrank(TMAE_Pch(i,:),TMAE_Lin(i,:),'alpha',alpha_b);
-        
-        medmse_i(i,k) = median(TMSE_Best(i,:));
-        medmse_p(i,k) = median(TMSE_Pch(i,:));
-        medmse_s(i,k) = median(TMSE_Spl(i,:));
-        medmse_l(i,k) = median(TMSE_Lin(i,:));
-        
-        iqrmse_i(i,k) = iqr(TMSE_Best(i,:));
-        iqrmse_p(i,k) = iqr(TMSE_Pch(i,:));
-        iqrmse_s(i,k) = iqr(TMSE_Spl(i,:));
-        iqrmse_l(i,k) = iqr(TMSE_Lin(i,:));
-        
-        medmae_i(i,k) = median(TMAE_Best(i,:));
-        medmae_p(i,k) = median(TMAE_Pch(i,:));
-        medmae_s(i,k) = median(TMAE_Spl(i,:));
 
-        iqrmae_i(i,k) = iqr(TMAE_Best(i,:));
-        iqrmae_p(i,k) = iqr(TMAE_Pch(i,:));
-        iqrmae_s(i,k) = iqr(TMAE_Spl(i,:));
+        for j=1:NM
+            [pval_ip(i,j),hval_ip(i,j)] = signrank(err_imp(:,i,j),err_pch(:,i,j),'alpha',alpha_b);
+            [pval_is(i,j),hval_is(i,j)] = signrank(err_imp(:,i,j),err_spl(:,i,j),'alpha',alpha_b);
+            [pval_il(i,j),hval_il(i,j)] = signrank(err_imp(:,i,j),err_lin(:,i,j),'alpha',alpha_b);
+            [pval_sp(i,j),hval_sp(i,j)] = signrank(err_spl(:,i,j),err_pch(:,i,j),'alpha',alpha_b);
+            [pval_sl(i,j),hval_sl(i,j)] = signrank(err_spl(:,i,j),err_lin(:,i,j),'alpha',alpha_b);
+            [pval_pl(i,j),hval_pl(i,j)] = signrank(err_pch(:,i,j),err_lin(:,i,j),'alpha',alpha_b);
+
+        end
+        med_i(i,:) = median(squeeze(err_imp(:,i,:)),1,'omitnan');
+        med_s(i,:) = median(squeeze(err_spl(:,i,:)),1,'omitnan');
+        med_p(i,:) = median(squeeze(err_pch(:,i,:)),1,'omitnan');
+        med_l(i,:) = median(squeeze(err_lin(:,i,:)),1,'omitnan');
+
+        [~,best_i(i,:)] = min(squeeze(err_imp(:,i,:)),[],2);
+        [~,best_s(i,:)] = min(squeeze(err_spl(:,i,:)),[],2);
+        [~,best_p(i,:)] = min(squeeze(err_pch(:,i,:)),[],2);
+        [~,best_l(i,:)] = min(squeeze(err_lin(:,i,:)),[],2);
+
+        for j=1:J
+            best_err_imp(j) = squeeze(err_imp(j,i,best_i(i,j)));
+            best_err_spl(j) = squeeze(err_spl(j,i,best_i(i,j)));
+            best_err_pch(j) = squeeze(err_pch(j,i,best_i(i,j)));
+        end
+
+        times_imp(i,:) = mean(St.Times_Imp,'omitnan');
+        times_decomp(i,:) = mean(St.Times_Decomp,'omitnan');
+        times_pch(i,:) = mean(St.Times_Pch,'omitnan');
+        times_spl(i,:) = mean(St.Times_Spl,'omitnan');
+        times_lin(i,:) = mean(St.Times_Lin,'omitnan');
+
+        med_ib(i) = median(best_err_imp);
+        med_sb(i) = median(best_err_spl);
+        med_pb(i) = median(best_err_pch);
+
+        [pval_bip(i),hval_bip(i)] = signrank(best_err_imp,best_err_pch,'alpha',alpha_b);
+        [pval_bis(i),hval_bis(i)] = signrank(best_err_imp,best_err_spl,'alpha',alpha_b);
+        [pval_bsp(i),hval_bsp(i)] = signrank(best_err_spl,best_err_pch,'alpha',alpha_b);
+
+        times_imp(i,:) = mean(St.Times_Imp,'omitnan');
+        times_decomp(i,:) = mean(St.Times_Decomp,'omitnan');
+        times_pch(i,:) = mean(St.Times_Pch,'omitnan');
+        times_spl(i,:) = mean(St.Times_Spl,'omitnan');
+        times_lin(i,:) = mean(St.Times_Lin,'omitnan');
+
+        Err_Imp(i,:) = best_err_imp;
+        Err_Spl(i,:) = best_err_spl;
+        Err_Pch(i,:) = best_err_pch;
 
     end
-    h = {TMSE_Best',TMSE_Spl',TMSE_Pch'};
+    PVAL_BIP(k,:) = pval_bip;
+    PVAL_BIS(k,:) = pval_bis;
+    PVAL_BSP(k,:) = pval_bsp;
+    HVAL_BIP(k,:) = hval_bip;
+    HVAL_BIS(k,:) = hval_bis;
+    HVAL_BSP(k,:) = hval_bsp;
+    MED_IB(k,:) = med_ib;
+    MED_SB(k,:) = med_sb;
+    MED_PB(k,:) = med_pb;
+
+
+    h = {Err_Imp',Err_Spl',Err_Pch'};
     figure(1)
-    subplot(2,2,k)
-    boxplotGroup(h,'PrimaryLabel',{'Best I','S','P'},'SecondaryLabel',ratio_s)
-    ylabel('NMSE')
-    %xlabel('Missing rate')
-    title(label)
-    hold off
+    set(gcf,'Position',[729 162 1192 800])
+    subplot(2,3,k)
+    set(gca,'Position',PosB(k,:))
+    bx = boxplotGroup(h,'PrimaryLabels',{'BestImp','HaLI[BI](s)','HaLI[BI](p)'},'SecondaryLabels',{'5%','10%','15%','20%'});
+    text(LabX(k),LabY(k),label,'FontSize',14,'interpreter','latex')
+    ylabel('NMAE')
+    ylim(YLim(k,:))
+    %title(label)
+    for aux=1:length(bx.axis2.XTickLabel)
+        bx.axis2.XTickLabel{aux} = ['\newline\newline\newline' bx.axis2.XTickLabel{aux} ];
+    end
 
-    %figure(1+k)
-    subplot(2,2,k)
-    bar(FrecM)
-    legend('5%','10%','15%','20%')
-    % legend('TLM','LSE','DMD','GPR','ARF','ARB','Orientation','vertical','Location','northeast')
-    xlim([0.5067    7])
-    %xticklabels({'5%','10%','15%','20%'})
-    xticklabels({'TLM','LSE','DMD','GPR','ARF','ARB'})
-    title(label)
-
-    catM = discretize(BestM(:),NM,'categorical',{'TLM','LSE','DMD','GPR','ARF','ARB'});
-    figure(6)
-    subplot(2,2,k)
+    figure(2)
+    set(gcf,'Position',[847 262 1074 700])
+    subplot(2,3,k)
+    catM = discretize(best_i,1:NM+1,'categorical',ImpNames);
     histogram(catM,'DisplayOrder','descend')
-    title(label,'FontSize',12)
-
-    
+    text(LabX2(k),LabY2(k),label,'FontSize',14,'interpreter','latex')
+    %histogram(catM)
+    %title([label '. Best Imputation'])
 end
