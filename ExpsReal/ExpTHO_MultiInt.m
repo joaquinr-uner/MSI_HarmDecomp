@@ -1,27 +1,28 @@
 addpath(genpath('/home/sentey/Dropbox/Github'))
 addpath(genpath('/home/jruiz'))
 drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/TIDIS/Señales Separadas/Thorax';
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Thorax';
-%drt = 'Flow_DR';
-%drt_r = 'Results/Flow_DR';
-
+drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Thorax3';
 severity = 'Normal';
 files = dir([drt '/' severity]);
 
 startindex = readmatrix(fullfile(drt,severity,'startindex.csv'));
-%load(fullfile(drt,severity,'startindex.mat'));
+
 files = files(3:end-1);
 J = length(files);
 opoptions = optimoptions(@fmincon,'Algorithm','interior-point','MaxFunctionEvaluations',100,'MaxIterations',30);
-ratio = [0.05:0.025:0.2];
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB'];
+%opoptions = optimoptions('fmincon');
+ratio = [0.05:0.05:0.2];
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA'];
+ErrorCrit = {'mae','mse','rmse'};
+ErrorNames = ['mae';'mse';'rme'];
+NE = size(ErrorCrit,2);
 %ImpMethods = {'TLM','LSE','DMD','GPR'};
 %ImpNames = ['TLM','LSE','DMD','GPR'];
 NM = length(ImpMethods);
 I = length(ratio);
 %ratio = 0.2;
-for j=16:J
+for j=1:J
     name = files(j).name;
     load(fullfile(drt,severity,name))
     fs = S.fs;
@@ -33,19 +34,22 @@ for j=16:J
     redun = 1;
     rmax = 50;
 
-    params_int = struct('sigma',sigma,'b',b,...
-        'fmax',fmax,'Criteria',{'Wang'},...
-        'crit_params',[4,6,8,12],'r_max',rmax,'redun',redun);
+    %params_decomp = struct('sigma',sigma,'b',b,...
+    %    'fmax',fmax,'Criteria',{'Wang'},...
+    %    'crit_params',[4,6,8,12],'r_max',rmax,'redun',redun,'with_trend',1);
+    params_decomp = struct('with_trend',1,'deshape',0);
+
     Ni = 3;
     p_tlm = struct();
-    M = 25;
     p_lse = struct();
     p_dmd = struct();
     p_gpr = struct();
     p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun,'options',opoptions);
     p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun,'options',opoptions);
+    p_ddtfa = struct();
+    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
 
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab};
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats};
     ini = startindex(j);
     s = S.signal(ini:ini+N-1);
     s = s - mean(s);
@@ -54,158 +58,164 @@ for j=16:J
     t = 0:1/fs:(N-1)/fs;
     f = 0:fs/N:fs*fmax-fs/N;
 
-    true = s';
-
-    N = length(true);
-    MSE_Imp = zeros(I,NM);
-    MSE_Best = zeros(I,Ni);
-    MSE_Spl = zeros(I,Ni);
-    MSE_Pch = zeros(I,Ni);
-    MSE_Lin = zeros(I,Ni);
-    MAE_Best = zeros(I,Ni);
-    MAE_Spl = zeros(I,Ni);
-    MAE_Pch = zeros(I,Ni);
-    MAE_Lin = zeros(I,Ni);
-    RMSE_Best = zeros(I,Ni);
-    RMSE_Spl = zeros(I,Ni);
-    RMSE_Pch = zeros(I,Ni);
-    RMSE_Lin = zeros(I,Ni);
-    TMSE_Best = zeros(I,1);
-    TMSE_Spl = zeros(I,1);
-    TMSE_Pch = zeros(I,1);
-    TMSE_Lin = zeros(I,1);
-    TMAE_Best = zeros(I,1);
-    TMAE_Spl = zeros(I,1);
-    TMAE_Pch = zeros(I,1);
-    TMAE_Lin = zeros(I,1);
-    TRMSE_Best = zeros(I,1);
-    TRMSE_Spl = zeros(I,1);
-    TRMSE_Pch = zeros(I,1);
-    TRMSE_Lin = zeros(I,1);
-    ImputeT = zeros(I,1);
-    DecompT = zeros(I,1);
-    IntT = zeros(I,1);
-
+    tr = s';
+    N = length(tr);
     TRUE = zeros(I,N);
-    Sigs = zeros(I,N);
-    SI = zeros(I,N);
-    S_Spl = zeros(I,N);
-    S_Pch = zeros(I,N);
-    S_Lin = zeros(I,N);
-    BestM = zeros(I,1);
+    S_MS = zeros(I,N);
+    S_Imp = zeros(I,NM,N);
+    S_Spl = zeros(I,NM,N);
+    S_Pch = zeros(I,NM,N);
+    S_Lin = zeros(I,NM,N);
+
+    r_opt = zeros(I,NM);
+    VL = zeros(I,Ni);
+    St = zeros(I,Ni);
+    Err_Imp = zeros(I,NM,NE);
+    Err_Spl = zeros(I,NM,NE);
+    Err_Pch = zeros(I,NM,NE);
+    Err_Lin = zeros(I,NM,NE);
+
+    Times_Imp = zeros(I,NM);
+    Times_Decomp = zeros(I,NM);
+    Times_Spl = zeros(I,NM);
+    Times_Pch = zeros(I,NM);
+    Times_Lin = zeros(I,NM);
+
+    BestI = zeros(I,1);
+    BestS = zeros(I,1);
+    BestP = zeros(I,1);
+    BestL = zeros(I,1);
     VLh = zeros(I,Ni);
     VSth = zeros(I,Ni);
     Ropt = zeros(I,1);
-    for i=1:I
+    parfor i=1:I
         L = round(ratio(i)*N);
         fprintf('Running for L = %i \n',L)
         Lmin = round(L/4);
         Lmax = round(L/2);
 
-        st1 = round(N/4-0.05*N) + randi(0.1*N);
-        st2 = round(N/2-0.05*N) + randi(0.1*N);
-        st3 = round(3*N/4-0.05*N) + randi(0.1*N);
+        st1 = round(N/4-0.05*N) + randi(0.05*N);
+        st2 = round(N/2-0.05*N) + randi(0.05*N);
+        st3 = round(3*N/4-0.05*N) + randi(0.05*N);
 
         Ll = floor(randfixedsum(3,1,L,Lmin,Lmax)');
         ed1 = st1 + Ll(1) - 1;
         ed2 = st2 + Ll(2) - 1;
         ed3 = st3 + Ll(3) - 1;
 
-        s = true;
+        s = tr;
         s(st1:ed1) = 0;
         s(st2:ed2) = 0;
         s(st3:ed3) = 0;
-
         fprintf('Interv 1: %i-%i. Interv2: %i-%i. Interv3: %i-%i  \n',st1,ed1,st2,ed2,st3,ed3)
-        [sth,Lh] = missing_ints(s,0.01*fs,0);
+        [sth,Lh] = missing_ints(s,struct('c','x','d',0.01*fs,'t',0));
         edh = sth + Lh - 1;
         fprintf('Starting imputation step...\n')
-        tic
-        s_imp = impute(s,sth,Lh,ImpMethods,params_imp);
-        impute_t = toc;
-        mse_imp = zeros(1,NM);
-        fprintf(['Imputation step completed in ' num2str(impute_t,2) ' seconds \n'])
+        %s_imp = impute(s,sth,Lh,ImpMethods,params_imp);
+        warning('off','all')
+        [s_imp,times_impj] = impute(s,sth,Lh,ImpMethods,params_imp,1);
+        warning('on','all')
 
-        for l=1:size(s_imp,1)
-            si = s_imp(l,:)';
-            [mse_imp(l)] = compute_errors(true,si,sth,Lh);
+        Sj_Imp = zeros(NM,N);Sj_Spl = Sj_Imp;Sj_Pch = Sj_Imp;Sj_Lin = Sj_Imp;
+
+        R_opt = zeros(NM,1);
+
+        Errj_Imp = zeros(NM,NE);
+        Errj_Spl = zeros(NM,NE);
+        Errj_Pch = zeros(NM,NE);
+        Errj_Lin = zeros(NM,NE);
+
+        times_hdecomp = zeros(NM,1);times_splj = zeros(NM,1);
+        times_pchj = zeros(NM,1);times_linj = zeros(NM,1);
+        for k=1:NM
+            fprintf(['Running harmonic decomposition and interpolation on ' ImpMethods{k} ' result ...\n'])
+            sk = s_imp(k,:)';
+            Errj_Imp(k,:) = compute_errors(tr,sk,sth,Lh,ErrorCrit);
+
+            tic
+            [ADk,phiDk,trendk] = harm_decomp(sk,params_decomp);
+            r_optjk = size(ADk,1);
+            t_hdecomp = toc;
+
+            if isnan(ADk)
+                sk_spl = zeros(1,N);
+                sk_pch = zeros(1,N);
+                sk_lin = zeros(1,N);
+
+                Errj_Spl(k,:) = NaN;
+                Errj_Pch(k,:) = NaN;
+                Errj_Lin(k,:) = NaN;
+
+                t_hdecomp = NaN;
+                t_spl = NaN;
+                t_pch = NaN;
+                t_lin = NaN;
+            else
+                tic
+                sk_spl = harm_int(ADk,phiDk,sth,Lh,'spline',sk,trendk);
+                t_spl = toc;
+                Errj_Spl(k,:) = compute_errors(tr,sk_spl,sth,Lh,ErrorCrit);
+                tic
+                sk_pch = harm_int(ADk,phiDk,sth,Lh,'pchip',sk,trendk);
+                t_pch = toc;
+                Errj_Pch(k,:) = compute_errors(tr,sk_pch,sth,Lh,ErrorCrit);
+
+                tic
+                sk_lin = harm_int(ADk,phiDk,sth,Lh,'lin',sk,trendk);
+                t_lin = toc;
+                Errj_Lin(k,:) = compute_errors(tr,sk_lin,sth,Lh,ErrorCrit);
+
+            end
+            Sj_Imp(k,:) = sk;
+            Sj_Spl(k,:) = sk_spl;
+            Sj_Pch(k,:) = sk_pch;
+            Sj_Lin(k,:) = sk_lin;
+            R_opt(k) = r_optjk;
+
+            times_hdecomp(k) = t_hdecomp;
+            times_splj(k) = t_spl;
+            times_pchj(k) = t_pch;
+            times_linj(k) = t_lin;
         end
-        [~,bestM] = min(mse_imp);
+        %fprintf(['harmonic decomposition and interpolation completed.... MSE_I: ' num2str(Tmse_bestj) '. MSE_S: ' num2str(Tmse_splj) '. MSE_P: ' num2str(Tmse_pchj) '\n'])
 
-        fprintf(['Running harmonic decomposition and interpolation on ' ImpMethods{bestM} ' result ...\n'])
-        si = s_imp(bestM,:)';
-        [Tmse_best, mse_best, Tmae_best, mae_best, Trmse_best, rmse_best] = compute_errors(true,si,sth,Lh);
-        tic
-        [AD,phiD] = harm_decomp(si,params_int);
-        decomp_t = toc;
-        r_opt = size(AD,1);
-        
-        tic
-        [si_spl,A_spl,phi_spl] = harm_int(AD,phiD,sth,Lh,'spline',si);
-        [Tmse_spl,mse_spl, Tmae_spl,mae_spl, Trmse_spl,rmse_spl] = compute_errors(true,si_spl,sth,Lh);
-        int_t = toc;
+        VL(i,:) = Lh;
+        St(i,:) = sth;
+        TRUE(i,:) = tr;
+        S_MS(i,:) = s;
+        S_Imp(i,:,:) = Sj_Imp;
+        S_Spl(i,:,:) = Sj_Spl;
+        S_Pch(i,:,:) = Sj_Pch;
+        S_Lin(i,:,:) = Sj_Lin;
 
-        [si_pch,A_pch,phi_pch] = harm_int(AD,phiD,sth,Lh,'pchip',si);
-        [Tmse_pch,mse_pch, Tmae_pch,mae_pch, Trmse_pch,rmse_pch] = compute_errors(true,si_pch,sth,Lh);
+        r_opt(i,:) = R_opt;
 
-        [si_lin,A_lin,phi_lin] = harm_int(AD,phiD,sth,Lh,'lin',si);
-        [Tmse_lin,mse_lin, Tmae_lin,mae_lin, Trmse_lin,rmse_lin] = compute_errors(true,si_lin,sth,Lh);
+        Err_Imp(i,:,:) = Errj_Imp;
+        Err_Spl(i,:,:) = Errj_Spl;
+        Err_Pch(i,:,:) = Errj_Pch;
+        Err_Lin(i,:,:) = Errj_Lin;
 
-        fprintf(['harmonic decomposition and interpolation completed in ' num2str(decomp_t+3*int_t,2) ' seconds \n'])
+        [~,BestI(i,:)] = min(Errj_Imp(:,1));
 
-        MSE_Imp(i,:) = mse_imp;
-        MSE_Best(i,:) = mse_best;
-        MSE_Spl(i,:) = mse_spl;
-        MSE_Pch(i,:) = mse_pch;
-        MSE_Lin(i,:) = mse_lin;
-        MAE_Best(i,:) = mae_best;
-        MAE_Spl(i,:) = mae_spl;
-        MAE_Pch(i,:) = mae_pch;
-        MAE_Lin(i,:) = mae_lin;
-        RMSE_Best(i,:) = rmse_best;
-        RMSE_Spl(i,:) = rmse_spl;
-        RMSE_Pch(i,:) = rmse_pch;
-        RMSE_Lin(i,:) = rmse_lin;
-        TMSE_Best(i) = Tmse_best;
-        TMSE_Spl(i) = Tmse_spl;
-        TMSE_Pch(i) = Tmse_pch;
-        TMSE_Lin(i) = Tmse_lin;
-        TMAE_Best(i) = Tmae_best;
-        TMAE_Spl(i) = Tmae_spl;
-        TMAE_Pch(i) = Tmae_pch;
-        TMAE_Lin(i) = Tmae_lin;
-        TRMSE_Best(i) = Trmse_best;
-        TRMSE_Spl(i) = Trmse_spl;
-        TRMSE_Pch(i) = Trmse_pch;
-        TRMSE_Lin(i) = Trmse_lin;
-        ImputeT(i) = impute_t;
-        DecompT(i) = decomp_t;
-        IntT(i) = int_t;
+        [~,BestS(i,:)] = min(Errj_Spl(:,1));
 
-        TRUE(i,:) = true;
-        Sigs(i,:) = s;
-        SI(i,:) = si;
-        S_Spl(i,:) = si_spl;
-        S_Pch(i,:) = si_pch;
-        S_Lin(i,:) = si_lin;
-        BestM(i) = bestM;
-        VLh(i,:) = Lh;
-        VSth(i,:) = sth;
-        Ropt(i) = r_opt;
+        [~,BestP(i,:)] = min(Errj_Pch(:,1));
+
+        [~,BestL(i,:)] = min(Errj_Lin(:,1));
+
+        fprintf(['Best Imputation Method: ' ImpMethods{BestI(i,:)} '. Best Imputation+Pchip_Interp Method: ' ImpMethods{BestP(i,:)} '\n'])
+        Times_Decomp(i,:) = times_hdecomp;
+        Times_Imp(i,:) = times_impj;
+        Times_Spl(i,:) = times_splj;
+        Times_Pch(i,:) = times_pchj;
+        Times_Lin(i,:) = times_linj;
     end
-
-        St = struct('MSE_Imp',MSE_Imp,'MSE_Best',MSE_Best,'MSE_Spl',MSE_Spl,...
-            'MSE_Pch',MSE_Pch,'MSE_Lin',MSE_Lin,...
-            'MAE_Best',MAE_Best,'MAE_Spl',MAE_Spl,'MAE_Pch',MAE_Pch, ...
-            'MAE_Lin',MAE_Lin,'RMSE_Best',RMSE_Best,'RMSE_Spl',RMSE_Spl, ...
-            'RMSE_Pch',RMSE_Pch,'RMSE_Lin',RMSE_Lin, ...
-            'TMSE_Best',TMSE_Best,'TMSE_Spl',TMSE_Spl,'TMSE_Pch',TMSE_Pch, ...
-            'TMSE_Lin',TMSE_Lin,'TMAE_Best',TMAE_Best,'TMAE_Spl',TMAE_Spl, ...
-            'TMAE_Pch',TMAE_Pch,'TMAE_Lin',TMAE_Lin,'TRMSE_Best',TRMSE_Best, ...
-            'TRMSE_Spl',TRMSE_Spl,'TRMSE_Pch',TRMSE_Pch,'TRMSE_Lin',TRMSE_Lin,...
-            'True',TRUE,'S_MS',Sigs,'VL',VLh,'St',VSth,'S_Imp',SI,...
-            'S_Spl',S_Spl,'S_Pch',S_Pch,'S_Lin',S_Lin,'BestM',BestM,...
-            'Ropt',Ropt,'ImpNames',ImpNames,'ImputeT',ImputeT,'DecompT', ...
-            DecompT,'IntT',IntT);
-        save(fullfile(drt_r,severity,['Results_MissingDataTHO_' name '.mat']),'St')
+    St = struct('Err_Imp',Err_Imp,'Err_Spl',Err_Spl,'Err_Pch',Err_Pch,'Err_Lin',...
+        Err_Lin,'True',TRUE,'S_MS',S_MS,'VL',VL,'St',St,'S_Imp',S_Imp,...
+        'S_Spl',S_Spl,'S_Pch',S_Pch,'S_Lin',S_Lin,'ImpNames',ImpNames, ...
+        'Metrics',ErrorNames,'Times_Imp',Times_Imp,'Times_Decomp',Times_Decomp,...
+        'Times_Spl',Times_Spl,'Times_Pch',Times_Pch,...
+        'Times_Lin',Times_Lin,'BestI',BestI,'BestS',BestS,'BestP',BestP,...
+        'BestL',BestL);
+    save(fullfile(drt_r,severity,['Results_MissingDataTHO_' name '.mat']),'St')
 end
