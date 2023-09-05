@@ -1,9 +1,11 @@
-addpath(genpath('/home/sentey/Dropbox/Github'))
-addpath(genpath('/home/jruiz'))
-drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/TIDIS/Señales Separadas/Plethysmogram';
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Plethysmogram2';
-%drt = 'Plethysmogram';
-%drt_r = 'Results/Plethysmogram';
+% Add path to harmonic_imputation toolbox
+
+drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/Plethysmogram'; % Data Directory
+
+drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Plethysmogram'; % Result Directory
+
+files = dir(drt);
+
 severity = 'Normal';
 files = dir([drt '/' severity]);
 
@@ -34,25 +36,6 @@ for j=1:J
     redun = 1;
     rmax = 50;
 
-    %params_decomp = struct('sigma',sigma,'b',b,...
-    %   'fmax',fmax,'Criteria',{'Wang'},...
-    %   'crit_params',[4,6,8,12],'rmax',rmax,'redun',redun,'with_trend',1);
-    params_decomp = struct('with_trend',1,'deshape',0);
-    
-    Ni = 3;
-    p_tlm = struct();
-    M = 25;
-    p_lse = struct();
-    p_dmd = struct();
-    p_gpr = struct();
-    p_edmd = struct();
-    p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
-    p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
-    p_ddtfa = struct();
-    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-    p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_edmd,p_lsw};
     ini = startindex(j);
     s = S.signal(ini:ini+N-1);
     s = s - mean(s);
@@ -62,6 +45,25 @@ for j=1:J
     f = 0:fs/N:fs*fmax-fs/N;
 
     tr = s';
+
+    [~,fh] = compute_sigma(s);
+
+    Th = N/fh;
+    Mi = floor(0.9*Th);
+    Ki = ceil(3*Th);
+   
+    p_tlm = struct();
+    p_lse = struct('M',Mi,'K',Ki);
+    p_dmd = struct('M',Mi,'K',Ki);
+    p_edmd = struct('M',Mi,'K',Ki);
+    p_gpr = struct('M',Mi,'K',Ki);
+    p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
+    p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
+    p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    p_ddtfa = struct('fs',fs);
+    
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};
 
     N = length(tr);
     TRUE = zeros(I,N);
