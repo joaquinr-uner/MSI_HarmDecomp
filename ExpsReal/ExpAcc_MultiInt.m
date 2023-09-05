@@ -1,7 +1,8 @@
-addpath(genpath('/home/sentey/Dropbox/Github'))
-addpath(genpath('/home/jruiz'))
-drt = '/media/Datos/joaquinruiz/Accelerometry/raw_accelerometry_data';
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Accelerometry';
+% Add path to harmonic_imputation toolbox
+
+drt = '.../raw_accelerometry_data'; % Data Directory
+
+drt_r = '.../Accelerometry'; % Result Directory
 
 files = dir(drt);
 
@@ -12,8 +13,8 @@ J = length(files);
 opoptions = optimoptions('fmincon');
 
 ratio = [0.05:0.05:0.2];
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT'];
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
@@ -31,21 +32,21 @@ for j=1:J
     redun = 1;
     rmax = 50;
 
-    %params_decomp = struct('fmax',fmax,'Criteria',{'Wang'},...
-    %    'crit_params',[4,6,8,12],'r_max',rmax,'redun',redun);
     params_decomp = struct('sigma',sigma,'r_max',rmax,'fmax',fmax,'with_trend',1,'deshape',1);
     Ni = 3;
     p_tlm = struct();
     M = 25;
     p_lse = struct();
     p_dmd = struct();
+    p_edmd = struct();
     p_gpr = struct();
-    p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun,'options',opoptions);
-    p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun,'options',opoptions);
-    p_ddtfa = struct('fs',fs);
+    p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
+    p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
+    p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa};
+    p_ddtfa = struct('fs',fs);
+    
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};
 
     ini = startindex(j);
     act = tab{:,'activity'};
