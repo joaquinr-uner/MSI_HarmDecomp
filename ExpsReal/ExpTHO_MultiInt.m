@@ -1,7 +1,9 @@
-addpath(genpath('/home/sentey/Dropbox/Github'))
-addpath(genpath('/home/jruiz'))
-drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/TIDIS/Señales Separadas/Thorax';
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Thorax3';
+% Add path to harmonic_imputation toolbox
+
+drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/Thorax'; % Data Directory
+
+drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Thorax'; % Result Directory
+
 severity = 'Normal';
 files = dir([drt '/' severity]);
 
@@ -10,18 +12,16 @@ startindex = readmatrix(fullfile(drt,severity,'startindex.csv'));
 files = files(3:end-1);
 J = length(files);
 opoptions = optimoptions(@fmincon,'Algorithm','interior-point','MaxFunctionEvaluations',100,'MaxIterations',30);
-%opoptions = optimoptions('fmincon');
 ratio = [0.05:0.05:0.2];
 ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA'};
 ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA'];
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
-%ImpMethods = {'TLM','LSE','DMD','GPR'};
-%ImpNames = ['TLM','LSE','DMD','GPR'];
+
 NM = length(ImpMethods);
 I = length(ratio);
-%ratio = 0.2;
+
 for j=1:J
     name = files(j).name;
     load(fullfile(drt,severity,name))
@@ -34,25 +34,27 @@ for j=1:J
     redun = 1;
     rmax = 50;
 
-    %params_decomp = struct('sigma',sigma,'b',b,...
-    %    'fmax',fmax,'Criteria',{'Wang'},...
-    %    'crit_params',[4,6,8,12],'r_max',rmax,'redun',redun,'with_trend',1);
-    params_decomp = struct('with_trend',1,'deshape',0);
-
-    Ni = 3;
-    p_tlm = struct();
-    p_lse = struct();
-    p_dmd = struct();
-    p_gpr = struct();
-    p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun,'options',opoptions);
-    p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun,'options',opoptions);
-    p_ddtfa = struct();
-    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats};
     ini = startindex(j);
     s = S.signal(ini:ini+N-1);
     s = s - mean(s);
+    
+    [~,fh] = compute_sigma(s);
+
+    Th = N/fh;
+    Mi = floor(0.9*Th);
+    Ki = ceil(3*Th);
+   
+    p_tlm = struct();
+    p_lse = struct('M',Mi,'K',Ki);
+    p_dmd = struct('M',Mi,'K',Ki);
+    p_edmd = struct('M',Mi,'K',Ki);
+    p_gpr = struct('M',Mi,'K',Ki);
+    p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
+    p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
+    p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    p_ddtfa = struct('fs',fs);
+    
 
     fprintf(['Processing ' name '. Start Index: ' num2str(ini) '\n'])
     t = 0:1/fs:(N-1)/fs;
