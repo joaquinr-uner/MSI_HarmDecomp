@@ -1,19 +1,19 @@
-addpath(genpath('/home/sentey/Dropbox/Github'))
-addpath(genpath('/home/jruiz'))
-drt = '/media/Datos/joaquinruiz/Accelerometry/raw_accelerometry_data';
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Accelerometry';
+drt = '.../raw_accelerometry_data'; % Data Directory
+
+drt_r = '.../Accelerometry'; % Result Directory
 
 files = dir(drt);
 
 startindex = readmatrix(fullfile(drt,'Acc_Indexes.csv'));
 files = files(4:end);
 J = length(files);
-%opoptions = optimoptions(@fmincon,'Algorithm','interior-point','MaxFunctionEvaluations',100,'MaxIterations',30);
 opoptions = optimoptions('fmincon');
 
 ratio = [0.05:0.05:0.2];
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT'];
+
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
+
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
@@ -31,8 +31,6 @@ for j=1:J
     redun = 1;
     rmax = 50;
 
-    %params_decomp = struct('fmax',fmax,'Criteria',{'Wang'},...
-    %    'crit_params',[4,6,8,12],'r_max',rmax,'redun',redun);
     params_decomp = struct('sigma',sigma,'r_max',rmax,'fmax',fmax,'with_trend',1,'deshape',1);
     Ni = 3;
     p_tlm = struct();

@@ -1,25 +1,26 @@
-addpath(genpath('/home/sentey/Dropbox/Github'))
-addpath(genpath('/home/jruiz'))
-drt = '/media/Datos/joaquinruiz/CHARIS';
-%drt = 'E:\CHARIS';
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/CHARIS2';
+% Add path to harmonic_imputation toolbox
+
+drt = '/media/Datos/joaquinruiz/CHARIS'; % Data Directory
+
+drt_r = '/media/Datos/joaquinruiz/MissingDataReal/CHARIS2'; % Result Directory
+
 files = dir(drt);
 
-%startindex = readmatrix(fullfile(drt,'CHARIS_Indexes.csv'));
 load(fullfile(drt,'CHARIS_Indexes.mat'));
 files = files(5:end);
 J = length(files);
 ratio = [0.05:0.05:0.2];
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT'];
+
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
+
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
+
 NE = size(ErrorCrit,2);
 NM = length(ImpMethods);
-%ImpMethods = {'TLM','LSE','DMD'};
-%ImpNames = ['TLM','LSE','DMD'];
+
 I = length(ratio);
-%ratio = 0.2;
 for j=1:J
     name = files(j).name;
     load(fullfile(drt,name))
@@ -32,10 +33,6 @@ for j=1:J
     redun = 1;
     rmax = 50;
     
-    %params_decomp = struct('sigma',sigma,'b',b,...
-    %    'fmax',fmax,'Criteria',{'Wang'},...
-    %    'crit_params',[4,6,8,12],'rmax',rmax,...
-    %    'redun',redun,'with_trend',1,'deshape',0);
     params_decomp = struct('sigma',sigma,'with_trend',1,'deshape',1,'K',2);
     
     Ni = 3;
@@ -50,8 +47,8 @@ for j=1:J
     p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_ddtfa = struct('fs',fs);
-    
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_edmd,p_lsw};
+
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};
     
     for m=1:3
         ini = startindex(j,m);
@@ -226,3 +223,4 @@ for j=1:J
         save(fullfile(drt_r,['Results_MissingDataABP_Int_' num2str(m) '_' name '.mat']),'St')
     end
 end
+	
