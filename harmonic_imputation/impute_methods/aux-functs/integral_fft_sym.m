@@ -1,0 +1,13 @@
+function y=integral_fft_sym(f)
+i=sqrt(-1);
+No=length(f);
+fe=[f;f(end-1:-1:2)];
+N=length(fe);
+ft=fft(fe);
+k=[0:N/2-1  -N/2:-1]'*pi;
+fy=zeros(N,1);
+fy(2:end)=-i*ft(2:end)./k(2:end);
+yp=real(ifft(fy));
+yl=2*(ft(1)/N)*[0:N]'/N;
+y1=[yp;yp(1)]+yl;
+y=y1(1:No)-y1(1);
