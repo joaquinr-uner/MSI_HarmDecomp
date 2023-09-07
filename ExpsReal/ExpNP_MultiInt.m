@@ -1,10 +1,8 @@
-% Add path to harmonic_imputation toolbox
+addpath(genpath(fullfile('..','harmonic_imputation')))
 
 drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/TIDIS/Señales Separadas/NasalPressure'; % Data Directory
 
 drt_r = '/media/Datos/joaquinruiz/MissingDataReal/NasalPressure'; % Result Directory
-
-files = dir(drt);
 
 severity = 'Normal';
 files = dir([drt '/' severity]);
@@ -16,8 +14,8 @@ J = length(files);
 opoptions = optimoptions(@fmincon,'Algorithm','interior-point','MaxFunctionEvaluations',100,'MaxIterations',30);
 
 ratio = [0.05:0.05:0.2];
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT'];
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA','LSW','EDMD'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA';'LSW';'EDD'];
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
@@ -59,8 +57,10 @@ for j=1:J
     p_gpr = struct('M',Mi,'K',Ki);
     p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
     p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
-    p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    p_lsw = struct();
+    p_tbats = struct();
+    %p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    %p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_ddtfa = struct('fs',fs);
     
     params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};

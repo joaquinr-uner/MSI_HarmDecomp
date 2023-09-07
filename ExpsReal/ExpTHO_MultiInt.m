@@ -1,5 +1,4 @@
-
-% Add path to harmonic_imputation toolbox
+addpath(genpath(fullfile('..','harmonic_imputation')))
 
 drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/Thorax'; % Data Directory
 
@@ -14,8 +13,8 @@ files = files(3:end-1);
 J = length(files);
 opoptions = optimoptions(@fmincon,'Algorithm','interior-point','MaxFunctionEvaluations',100,'MaxIterations',30);
 ratio = [0.05:0.05:0.2];
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA'];
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA','LSW','EDMD'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA';'LSW';'EDD'];
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
@@ -55,10 +54,13 @@ for j=1:J
     p_gpr = struct('M',Mi,'K',Ki);
     p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
     p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
-    p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    p_lsw = struct();
+    p_tbats = struct();
+    %p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    %p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_ddtfa = struct('fs',fs);
     
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};
 
     fprintf(['Processing ' name '. Start Index: ' num2str(ini) '\n'])
     t = 0:1/fs:(N-1)/fs;

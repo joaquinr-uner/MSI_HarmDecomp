@@ -1,8 +1,9 @@
-% Add path to harmonic_imputation toolbox
+addpath(genpath(fullfile('..','harmonic_imputation')))
 
-drt = '/media/Datos/joaquinruiz/CHARIS'; % Data Directory
+%drt = '/media/Datos/joaquinruiz/CHARIS'; % Data Directory
+drt = 'E:\CHARIS';
 
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/CHARIS2'; % Result Directory
+%drt_r = '/media/Datos/joaquinruiz/MissingDataReal/CHARIS2'; % Result Directory
 
 files = dir(drt);
 
@@ -44,8 +45,10 @@ for j=1:J
     p_gpr = struct();
     p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
     p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
-    p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    p_lsw = struct();
+    p_tbats = struct();
+    %p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    %p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_ddtfa = struct('fs',fs);
 
     params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};

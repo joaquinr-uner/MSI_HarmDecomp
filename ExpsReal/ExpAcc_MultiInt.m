@@ -1,3 +1,5 @@
+addpath(genpath(fullfile('..','harmonic_imputation')))
+
 drt = '.../raw_accelerometry_data'; % Data Directory
 
 drt_r = '.../Accelerometry'; % Result Directory
@@ -40,10 +42,13 @@ for j=1:J
     p_gpr = struct();
     p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun,'options',opoptions);
     p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun,'options',opoptions);
+    p_lsw = struct();
+    p_tbats = struct();
+    %p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    %p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_ddtfa = struct('fs',fs);
-    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa};
+    
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};
 
     ini = startindex(j);
     act = tab{:,'activity'};

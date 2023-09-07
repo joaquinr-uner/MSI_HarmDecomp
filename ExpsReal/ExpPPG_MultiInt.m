@@ -1,10 +1,8 @@
-% Add path to harmonic_imputation toolbox
+addpath(genpath(fullfile('..','harmonic_imputation')))
 
 drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/Plethysmogram'; % Data Directory
 
 drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Plethysmogram'; % Result Directory
-
-files = dir(drt);
 
 severity = 'Normal';
 files = dir([drt '/' severity]);
@@ -61,8 +59,10 @@ for j=1:J
     p_gpr = struct('M',Mi,'K',Ki);
     p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
     p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
-    p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
-    p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    p_lsw = struct();
+    p_tbats = struct();
+    %p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
+    %p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_ddtfa = struct('fs',fs);
     
     params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};
