@@ -1,4 +1,5 @@
-addpath(genpath('C:\Users\Intel\Dropbox\Github'))
+
+addpath(genpath(fullfile('..','harmonic_imputation')))
 drt = '/media/Datos/joaquinruiz/MissingDatSynth/MultiInt_Noise2';
 
 N = 4000;

@@ -1,5 +1,4 @@
-% Add path to harmonic_imputation toolbox
-addpath(genpath('C:\Users\Intel\Dropbox\Github\harmonic_imputation'))
+addpath(genpath(fullfile('..','harmonic_imputation')))
 N = 8000;
 sigma = 1e-4;
 fmax = 0.5;
