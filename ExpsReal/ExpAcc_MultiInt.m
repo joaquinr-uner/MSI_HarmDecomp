@@ -1,17 +1,21 @@
 addpath(genpath(fullfile('..','harmonic_imputation')))
 
-drt = '.../raw_accelerometry_data'; % Data Directory
+drt = '...'; % Data Directory
 
-drt_r = '.../Accelerometry'; % Result Directory
+drt_r = '...'; % Result Directory
 
 files = dir(drt);
 
-startindex = readmatrix(fullfile(drt,'Acc_Indexes.csv'));
+%startindex = readmatrix(fullfile(drt,'Acc_Indexes.csv'));
+load(fullfile(drt,'Acc_Indexes.mat'))
 files = files(4:end);
 J = length(files);
 opoptions = optimoptions('fmincon');
 
 ratio = [0.05:0.05:0.2];
+
+%ImpMethods = {'TLM'};
+%ImpNames = ['TLM'];
 
 ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
 ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
@@ -101,7 +105,7 @@ for j=1:J
     VLh = zeros(I,Ni);
     VSth = zeros(I,Ni);
     Ropt = zeros(I,1);
-    parfor i=1:I
+    for i=1:I
         L = round(ratio(i)*N);
         fprintf('Running for L = %i \n',L)
         Lmin = round(L/4);

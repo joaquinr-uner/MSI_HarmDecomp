@@ -1,9 +1,8 @@
 addpath(genpath(fullfile('..','harmonic_imputation')))
 
-%drt = '/media/Datos/joaquinruiz/CHARIS'; % Data Directory
-drt = 'E:\CHARIS';
+drt = '...'; % Data Directory
 
-%drt_r = '/media/Datos/joaquinruiz/MissingDataReal/CHARIS2'; % Result Directory
+drt_r = '...'; % Result Directory
 
 files = dir(drt);
 
@@ -11,6 +10,9 @@ load(fullfile(drt,'CHARIS_Indexes.mat'));
 files = files(5:end);
 J = length(files);
 ratio = [0.05:0.05:0.2];
+
+%ImpMethods = {'TLM'};
+%ImpNames = {'TLM'};
 
 ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
 ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
@@ -34,7 +36,7 @@ for j=1:J
     redun = 1;
     rmax = 50;
     
-    params_decomp = struct('sigma',sigma,'with_trend',1,'deshape',1,'K',2);
+    params_decomp = struct('sigma',sigma,'fmax',fmax,'with_trend',1,'deshape',1,'K',2);
     
     Ni = 3;
     p_tlm = struct();

@@ -1,8 +1,8 @@
 addpath(genpath(fullfile('..','harmonic_imputation')))
 
-drt = '/home/sentey/Documentos/Missing Data Imputation - Papers y Datos/Flow_DR'; % Data Directory
+drt = '...'; % Data Directory
 
-drt_r = '/media/Datos/joaquinruiz/MissingDataReal/Airflow'; % Result Directory
+drt_r = '...'; % Result Directory
 
 severity = 'Normal';
 files = dir([drt '/' severity]);
@@ -10,10 +10,15 @@ files = dir([drt '/' severity]);
 load(fullfile(drt,severity,'startindex.mat'));
 files = files(3:end-1);
 J = length(files);
+ratio = [0.05:0.05:0.2];
 opoptions = optimoptions(@fmincon,'Algorithm','interior-point','MaxFunctionEvaluations',100,'MaxIterations',30);
+
+%ImpMethods = {'TLM'};
+%ImpNames = {'TLM'};
 
 ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
 ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
+
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
@@ -31,6 +36,8 @@ for j=1:J
     b = round(3/pi*sqrt(sigma/2)*N);
     redun = 1;
     rmax = 50;
+    
+    params_decomp = struct('sigma',sigma,'fmax',fmax,'with_trend',1,'deshape',1,'K',1);
 
     ini = startindex(j);
     s = S.signal(ini:ini+N-1);
@@ -48,6 +55,7 @@ for j=1:J
     Mi = floor(0.9*Th);
     Ki = ceil(3*Th);
    
+    Ni = 3;
     p_tlm = struct();
     p_lse = struct('M',Mi,'K',Ki);
     p_dmd = struct('M',Mi,'K',Ki);
@@ -92,7 +100,7 @@ for j=1:J
     VLh = zeros(I,Ni);
     VSth = zeros(I,Ni);
     Ropt = zeros(I,1);
-    parfor i=1:I
+    for i=1:I
         L = round(ratio(i)*N);
         fprintf('Running for L = %i \n',L)
         Lmin = round(L/4);
