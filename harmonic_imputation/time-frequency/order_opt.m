@@ -1,4 +1,4 @@
-function [r_opt,GCV,Rl,Wn,Kv] = order_opt(s,r_max,A,phi,criteria,params,F)
+function [r_opt,Crits] = order_opt(s,r_max,A,phi,criteria,params,F)
 %% 
 % Optimum number of harmonics estimation by trigonometric model regression
 % selection criteria
@@ -75,7 +75,7 @@ for i=1:length(criteria)
                 if isfield(params,'H')
                     H = params.H;
                 else
-                    rc = round(log(N)^2);
+                    H = round(log(N)^2);
                 end
             end
             Kv = zeros(r_max,H);
@@ -121,23 +121,28 @@ for r=1:r_max
 end
 
 r_opt = zeros(1,length(criteria));
+Crits = struct();
 for i=1:length(criteria)
     cri = criteria{i};
     switch cri
         case 'GCV'
             [~,aux] = min(GCV);
             r_opt(i) = aux;
+            Crits.GCV = GCV;
         case 'Rl'
             [~,aux] = min(Rl);
             r_opt(i) = aux;
+            Crits.Rl = Rl;
         case 'Wang'
             [~,aux] = min(Wn(:));
             [bc,~] =  ind2sub(size(Wn),aux);
             r_opt(i) = bc;
+            Crits.Wn = Wn;
         case 'Kavalieris'
             [~,aux] = min(Kv(:));
             [bc,~] =  ind2sub(size(Kv),aux);
             r_opt(i) = bc;
+            Crits.Kv = Kv;
             
     end
 end
