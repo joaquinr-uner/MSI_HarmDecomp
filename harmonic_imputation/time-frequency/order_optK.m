@@ -1,4 +1,4 @@
-function [r_opt,GCV,Rl,Wn,Kv] = order_optK(s,r_max,A,phi,criteria,params,F)
+function [r_opt,Crits] = order_optK(s,r_max,A,phi,criteria,params,F)
 %% 
 % Optimum number of harmonics estimation by trigonometric model regression
 % selection criteria for multicomponent signals 
@@ -81,7 +81,7 @@ for i=1:length(criteria)
             end
             Kv = zeros(prod(r_max),H);
         otherwise
-            fprintf('No valid selection criteria given')
+            fprintf('%s is not a valid selection criteria \n',cri)
     end
 end
 if ~isa(criteria,'cell')
@@ -123,31 +123,32 @@ for r=1:size(vecr,2)
                 [~,var] = lpc(E,h);
                 Kv(r,h) = log(var) + (5*sum(vecr(:,r)) + h)*log10(N)/N;
             end
-            otherwise
-                fprintf('No valid selection criteria given')
-        end
-        
+        end  
     end
 end
 
 r_opt = zeros(K,length(criteria));
+Crits = struct();
 for i=1:length(criteria)
     cri = criteria{i};
     switch cri
         case 'GCV'
             [~,aux] = min(GCV);
             r_opt(:,i) = vecr(:,aux);
+            Crits.GCV = GCV;
         case 'Rl'
             [~,aux] = min(Rl);
             r_opt(:,i) = vecr(:,aux);
+            Crits.Rl = Rl;
         case 'Wang'
             [~,aux] = min(Wn(:));
             [bc,~] =  ind2sub(size(Wn),aux);
             r_opt(:,i) = vecr(:,bc);
+            Crits.Wn = Wn;
         case 'Kavalieris'
             [~,aux] = min(Kv(:));
             [bc,~] =  ind2sub(size(Kv),aux);
             r_opt(:,i) = vecr(:,bc);
-            
+            Crits.Kv = Kv;
     end
 end
