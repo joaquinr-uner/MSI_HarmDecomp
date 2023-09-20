@@ -50,7 +50,7 @@ for i=1:length(criteria)
                     sigma = params.sigma;
                 else
                     if ~isempty(F)
-                        sigma = median(abs(real(F(:))))/0.6745;
+                        sigma = sqrt(2)*median(abs(real(F(:))))/0.6745;
                     else
                         fprintf('STFT Needed')
                     end
@@ -80,7 +80,7 @@ for i=1:length(criteria)
             end
             Kv = zeros(r_max,H);
         otherwise
-            fprintf('No valid selection criteria given')
+            fprintf('%s is not a valid selection criteria \n',cri)
     end
 end
 if ~isa(criteria,'cell')
@@ -113,8 +113,6 @@ for r=1:r_max
                 [~,var] = lpc(E,h);
                 Kv(r,h) = log(var) + (5*r + h)*log10(N)/N;
             end
-            otherwise
-                fprintf('No valid selection criteria given')
         end
         
     end
