@@ -134,7 +134,7 @@ end
 
 if with_trend
     ckb = max([ones(1,N);C(km,:)-2*b]);
-    Trend = real(2/max(sF)*sum(F(1:ckb,:),1));
+    Trend = sqrt(2)*2/max(sF)*real(sum(F(1:ckb,:),1));
     Trend = Trend(:);
     x = x - Trend;
 

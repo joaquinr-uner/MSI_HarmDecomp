@@ -15,10 +15,10 @@ if nargin<6
 end
 [K, N] = size(F);
 
-%ti = randi([P,round(N/P)]); %indice de inicio
+ti = randi([P,round(N/P)]); %indice de inicio
 
-%v_t = round(linspace(ti,N-ti,P));
-v_t = randi([round(0.1*N),round(0.9*N)],[1,P]);
+v_t = round(linspace(ti,N-ti,P));
+
 C = zeros(P,N);
 Fun = zeros(P,1);
 
@@ -27,11 +27,13 @@ for p=1:P
    [~,C(p,v_t(p)-1)] = max(abs(F(:,v_t(p)-1)).^2);
    
    for i=v_t(p)+1:N
-   I = C(p,i-1)-e:C(p,i-1)+e;
+   low = max(1,C(p,i-1)-e);
+   upp = min(K,C(p,i-1)+e);
+   I = low:upp;
    I(I<1) = 1;
    I(I>K) = K;
    [Fun_aux,aux] = max(abs(F(I,i)).^2 - a*(I'-C(p,i-1)).^2 - b*(I' - 2*C(p,i-1) + C(p,i-2)).^2);
-   C(p,i) = aux + C(p,i-1) - e - 1;
+   C(p,i) = aux + low;
    if (C(p,i)<1)
        C(p,i)=1;
    end
@@ -42,11 +44,13 @@ for p=1:P
    end
    
    for i=v_t(p)-1:-1:1
-       I = C(p,i+1)-e:C(p,i+1)+e;
+       low = max(1,C(p,i+1)-e);
+       upp = min(K,C(p,i+1)+e);
+       I = low:upp;
        I(I<1) = 1;
        I(I>K) = K;
-       [~,aux] = max(abs(F(I,i)).^2 - a*(I'-C(p,i+1)).^2 - b*(I' - 2*C(p,i+1) + C(p,i+2)).^2);
-       C(p,i) = aux + C(p,i+1) - e - 1;
+       [Fun_aux,aux] = max(abs(F(I,i)).^2 - a*(I'-C(p,i+1)).^2 - b*(I' - 2*C(p,i+1) + C(p,i+2)).^2);
+       C(p,i) = aux + low;
        if (C(p,i)<1)
            C(p,i)=1;
        end
@@ -59,5 +63,6 @@ end
 
 [~,indx] = max(Fun);
 c = C(indx,:);
-%c = c-1;
+c = c-1;
 end
+

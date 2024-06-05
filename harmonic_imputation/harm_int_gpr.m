@@ -1,4 +1,4 @@
-function [s_int, trend_int, A_int, phi_int, CONF] = harm_int_gpr(A,phi,st,L,intp,s_imp,trend)
+function [s_int, trend_int, A_int, phi_int, CONF] = harm_int_gpr(A,phi,st,L,intp,s_imp,trend,kern)
 %%
 % Missing data imputation refinement by harmonic interpolation.
 % Inputs: 
@@ -8,10 +8,15 @@ function [s_int, trend_int, A_int, phi_int, CONF] = harm_int_gpr(A,phi,st,L,intp
 %         L: lengths of missing data intervals.
 %         intp: interpolation type. spline or pchip.
 %         s_imp: signal with imputed values
+%         kern: kernel function for the GPR.
 % Outputs:
 %         s_int: signal with improved missing data imputation.
 %         A_int: interpolated harmonic amplitudes.
 %         phi_int: interpolated harmonic phases.
+
+if nargin<8
+    kern = 'matern32';
+end
 
 if nargin< 7
     trend = zeros(size(s_imp));
@@ -86,8 +91,8 @@ for i=1:Ni
                 estInd = lint';
             end
 
-            gprA = fitrgp(estInd,A(j,estInd));
-            gprphi = fitrgp(estInd,phi(j,estInd));
+            gprA = fitrgp(estInd,A(j,estInd),'KernelFunction',kern);
+            gprphi = fitrgp(estInd,phi(j,estInd),'KernelFunction',kern);
             %gprA = fitrgp(xq',A(j,xq));
             %gprphi = fitrgp(xq',phi(j,xq));
             [Ai,~,confAi] = predict(gprA,[sti:edi]');
@@ -118,7 +123,7 @@ for i=1:Ni
             trend_int = trend;
         else
             if strcmp(intp,'gpr')
-            gprT = fitrgp(estInd,trend(estInd));
+            gprT = fitrgp(estInd,trend(estInd),'KernelFunction','matern32');
             [Ti,~,confTi] = predict(gprT,[st(i):ed(i)]');
             trend_int(sti:edi) = Ti;
             CONFTil = confTi(:,1);

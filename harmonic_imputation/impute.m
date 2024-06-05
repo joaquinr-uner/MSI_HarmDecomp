@@ -56,6 +56,22 @@ else
                             fprintf(['Imputation completed by TLM method. Time: ' num2str(t_imp(k)) '\n'])
                         end
                     end
+                    case 'dtw'
+                    if nargin<5
+                        tic
+                        x_imp(k,:) = impute_tlm_dtw(x,st,L);
+                        t_imp(k) = toc;
+                        if verbose
+                            fprintf(['Imputation completed by TLM DTW method. Time: ' num2str(t_imp(k)) '\n'])
+                        end
+                    else
+                        tic
+                        x_imp(k,:) = impute_tlm_dtw(x,st,L,params{k});
+                        t_imp(k) = toc;
+                        if verbose
+                            fprintf(['Imputation completed by TLM DTW method. Time: ' num2str(t_imp(k)) '\n'])
+                        end
+                    end
                 case 'lse'
                     if nargin<5
                         tic
