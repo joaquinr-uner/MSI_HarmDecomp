@@ -216,6 +216,22 @@ else
                             fprintf(['Imputation completed by LSW method. Time: ' num2str(t_imp(k)) '\n'])
                         end
                     end
+                    case 'drago'
+                    if nargin<5
+                        tic
+                        x_imp(k,:) = impute_drago(x,st,L);
+                        t_imp(k) = toc;
+                        if verbose
+                            fprintf(['Imputation completed by DRAGO method. Time: ' num2str(t_imp(k)) '\n'])
+                        end
+                    else
+                        tic
+                        x_imp(k,:) = impute_drago(x,st,L,params{k});
+                        t_imp(k) = toc;
+                        if verbose
+                            fprintf(['Imputation completed by DRAGO method. Time: ' num2str(t_imp(k)) '\n'])
+                        end
+                    end
                 otherwise
                     error(['Unknown imputation method: ' method{k}])
             end
