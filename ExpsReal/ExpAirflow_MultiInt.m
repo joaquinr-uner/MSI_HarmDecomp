@@ -5,19 +5,19 @@ drt = '...'; % Data Directory
 drt_r = '...'; % Result Directory
 
 severity = 'Normal';
-files = dir([drt '/' severity]);
+files = dir([drt '/Flow_DR/' severity]);
 
-load(fullfile(drt,severity,'startindex.mat'));
+startindex = readmatrix(fullfile(drt,'Airflow_Indexes.csv'));
 files = files(3:end-1);
 J = length(files);
 ratio = [0.05:0.05:0.2];
 opoptions = optimoptions(@fmincon,'Algorithm','interior-point','MaxFunctionEvaluations',100,'MaxIterations',30);
 
-%ImpMethods = {'TLM'};
-%ImpNames = {'TLM'};
+ImpMethods = {'TLM'};
+ImpNames = {'TLM'};
 
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
+%ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
+%ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
 
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
