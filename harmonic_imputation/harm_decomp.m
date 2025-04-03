@@ -106,9 +106,13 @@ U = istct_fast(F,f,0.3,0.3);
 
 W = F.*U;
 c = ridge_ext(W,0.1,0.1,10,10);
-cbl = max([ones(1,N);c-b]);
-cbu = min([N*ones(1,N);c+b]);
-W(cbl:cbu,:) = 0;
+%cbl = max([ones(1,N);ceil(c-b)]);
+%cbu = min([N*ones(1,N);floor(c+b)]);
+for i=1:N
+    cbli = max([1;ceil(c(i)-b)]);
+    cbui = min([N;ceil(c(i)-b)]);
+    W(cbli:cbui,i) = 0;
+end
 C(1,:) = ridge_correct(c,F,b,1);
 
 for k=2:K
@@ -133,8 +137,10 @@ for k=1:K
 end
 
 if with_trend
-    ckb = max([ones(1,N);C(km,:)-2*b]);
-    Trend = sqrt(2)*2/max(sF)*real(sum(F(1:ckb,:),1));
+    for i=1:N
+        ckbi = max([1;ceil(C(km,i)-2*b)]);
+        Trend = sqrt(2)*2/max(sF)*real(sum(F(1:ckbi,:),1));
+    end
     Trend = Trend(:);
     x = x - Trend;
 
