@@ -30,6 +30,6 @@ for k=1:D
     end
 
 A(k,:) = abs(y);
-phi(k,:) = phase(y)/(2*pi);
+phi(k,:) = unwrap(angle(y))/(2*pi);
 end
 end

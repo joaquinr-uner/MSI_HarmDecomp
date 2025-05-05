@@ -5,10 +5,9 @@ drt = '...'; % Data Directory
 drt_r = '...'; % Result Directory
 
 severity = 'Normal';
-files = dir([drt '/' severity]);
+files = dir([drt '/Thorax/' severity]);
 
-%startindex = readmatrix(fullfile(drt,severity,'startindex.csv'));
-load(fullfile(drt,severity,'startindex.mat'));
+startindex = readmatrix(fullfile(drt,'Tho_Indexes.csv'));
 
 files = files(3:end-1);
 J = length(files);

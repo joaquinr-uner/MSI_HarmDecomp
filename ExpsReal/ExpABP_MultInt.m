@@ -4,9 +4,9 @@ drt = '...'; % Data Directory
 
 drt_r = '...'; % Result Directory
 
-files = dir(drt);
+files = dir(drt,'CHARIS');
 
-load(fullfile(drt,'CHARIS_Indexes.mat'));
+startindex = readmatrix(fullfile(drt,CHARIS_Indexes.csv'));
 files = files(5:end);
 J = length(files);
 ratio = [0.05:0.05:0.2];

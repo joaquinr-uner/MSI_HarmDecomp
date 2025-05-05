@@ -4,21 +4,21 @@ drt = '...'; % Data Directory
 
 drt_r = '...'; % Result Directory
 
-files = dir(drt);
+files = dir(drt,'Accelerometry');
 
-%startindex = readmatrix(fullfile(drt,'Acc_Indexes.csv'));
-load(fullfile(drt,'Acc_Indexes.mat'))
+startindex = readmatrix(fullfile(drt,'Acc_Indexes.csv'));
+%load(fullfile(drt,'Acc_Indexes.mat'))
 files = files(4:end);
 J = length(files);
 opoptions = optimoptions('fmincon');
 
 ratio = [0.05:0.05:0.2];
 
-%ImpMethods = {'TLM'};
-%ImpNames = ['TLM'];
+ImpMethods = {'TLM'};
+ImpNames = ['TLM'];
 
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
+%ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','LSW','EDMD'};
+%ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'LSW';'EDD'];
 
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];

@@ -5,10 +5,9 @@ drt = '...'; % Data Directory
 drt_r = '...'; % Result Directory
 
 severity = 'Normal';
-files = dir([drt '/' severity]);
+files = dir([drt 'Plethysmogram/' severity]);
 
-%startindex = readmatrix(fullfile(drt,severity,'startindex.csv'));
-load(fullfile(drt,severity,'startindex.mat'))
+startindex = readmatrix(fullfile(drt,'PPG_Indexes.csv'));
 files = files(3:end-2);
 J = length(files);
 ratio = [0.05:0.05:0.2];
