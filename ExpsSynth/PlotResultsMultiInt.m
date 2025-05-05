@@ -1,4 +1,3 @@
-
 addpath(genpath(fullfile('..','harmonic_imputation')))
 drt = '/media/Datos/joaquinruiz/MissingDatSynth/MultiInt_Noise2';
 

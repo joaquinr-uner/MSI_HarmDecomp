@@ -14,10 +14,6 @@ function [sigma, fh, b] = compute_sigma(x,fhmode)
 %         fh: estimated signal dominant frequency
 %         b: window half-support in frequency domain
 
-if nargin<2
-    fhmode = 1;
-end
-
 N = length(x);
 
 X = fft(x);
