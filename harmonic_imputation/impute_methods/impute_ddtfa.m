@@ -32,7 +32,7 @@ else
     if isfield(params,'fh')
         fh = params.fh;
     else
-        [~,fh] = compute_sigma(s);
+        [~,fh] = compute_sigma(s,1);
         fh = fh*fs/length(s);
     end
 end

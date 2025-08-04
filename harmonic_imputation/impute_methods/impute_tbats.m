@@ -49,7 +49,7 @@ for qi=1:Ni
 
     Np = length(sp);
     if T == 0
-        [sigma,~,b] = compute_sigma(sp);
+        [sigma,~,b] = compute_sigma(sp,1);
 
         ff = 0:1/length(sp):0.5-1/length(sp);
         [Ff,sFf] = STFT_Gauss(sp,Np,sigma,0.5);
