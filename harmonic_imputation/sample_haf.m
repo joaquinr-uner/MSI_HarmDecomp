@@ -23,8 +23,8 @@ for k=1:n
             coefs = rand(1,4);
             coefs = coefs/sum(coefs)-0.1;
             alp = 0;
-            for k=1:ord
-                alp = alp + coefs(k)*(t/t(end)).^k;
+            for j=1:ord
+                alp = alp + coefs(j)*(t/t(end)).^j;
             end
 
         case 'Trigo'
