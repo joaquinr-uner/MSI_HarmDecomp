@@ -8,8 +8,10 @@ redun = 1;
 b = round(3/pi*sqrt(sigma/2)*N);
 ratio = [0.05:0.05:0.2];
 J = 100;
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA','EDMD','LSW','DRAGO'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA';'EDD';'LSW';'DGO'];
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','EDMD','LSW','DRAGO','DDTFA'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'EDD';'LSW';'DGO';'TFA'];
+%ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB'};
+%ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB'];
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
@@ -32,6 +34,7 @@ p_lsw= struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_metho
 p_lse = struct();
 p_dmd = struct();
 p_gpr = struct();
+p_drago = struct();
 p_ddtfa = struct('fs',fs);
 
 for l=1:length(vSNR)
@@ -63,13 +66,7 @@ for l=1:length(vSNR)
         BestP = zeros(J,1);
         BestL = zeros(J,1);
 
-        %M = 25;
-        %p_lse = struct('M',1.5*L,'K',round(3.75*L));
-        %p_dmd = struct('M',1.5*L,'K',round(3.75*L));
-        %p_gpr = struct('M',1.5*L,'K',round(3.75*L),'fmode','sd','pmode','bcd');
-
-        params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_edmd,p_lsw};
-        %params_imp = {p_arimaf,p_arimab};
+        params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_edmd,p_lsw,p_drago,p_ddtfa};
 
         r_opt = zeros(J,NM);
         fprintf('Running for L = %i \n',L)
@@ -92,7 +89,7 @@ for l=1:length(vSNR)
             e = 1:K;c = zeros(1,K);
 
             for k=2:K
-                e(k) = e(k) + 0.01 - 0.02*rand(1,1);%c = [0,0.25,0.25,0.25,0.25,0.25]*pi;
+                e(k) = e(k) + 0.01 - 0.02*rand(1,1);
             end
             x_c = cos(2*pi*phi);
             ALP = zeros(K-1,N);
