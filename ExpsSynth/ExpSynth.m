@@ -1,23 +1,31 @@
 addpath(genpath(fullfile('..','harmonic_imputation')))
-N = 8000;
+N = 4000;
 sigma = 1e-4;
 fmax = 0.5;
-redun = 100;
+redun = 1;
 b = round(3/pi*sqrt(sigma/2)*N);
 
 ratio = [0.05:0.025:0.2];
-J = 1;
+J = 100;
 
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB'];
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','EDMD','LSW','DRAGO','DDTFA'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'EDD';'LSW';'DGO';'TFA'];
 NM = length(ImpMethods);
 params_int = struct('sigma',sigma,'b',b,...
     'fmax',fmax,'Criteria',{'Wang'},...
     'crit_params',[4,6,8,12],'redun',redun);
-Ni = 3; 
+Ni = 3;
 p_tlm = struct('k',0.5);
 p_arimaf = struct('cycl',3,'fmax',fmax,'redun',redun);
 p_arimab = struct('cycl',3,'fmax',fmax,'redun',redun);
+p_lse = struct();
+p_dmd = struct();
+p_gpr = struct();
+p_tbats = struct();
+p_edmd = struct();
+p_lsw = struct();
+p_drago = struct();
+p_ddtfa = struct();
 for i=1:length(ratio)
     L = round(ratio(i)*N);
     mse_imp = zeros(J,NM);
@@ -48,16 +56,11 @@ for i=1:length(ratio)
     MSE_Pch = zeros(J,1);
     
     bestM = zeros(J,1);
-    M = 25;
-    p_lse = struct();
-    p_dmd = struct();
-    p_gpr = struct();
 
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab};
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_edmd,p_lsw,p_drago,p_ddtfa};
     r_opt = zeros(J,NM);
     fprintf('Running for L = %i \n',L)
     for j=1:J
-        N = 8000;
         K = 3 + randi(3);
         fs = 4000;
         T = N/fs;
@@ -68,22 +71,17 @@ for i=1:length(ratio)
 
         t = 0:1/fs:(N-1)/fs;
         f = 0:fs/N:fs*fmax-fs/N;
-        % Random ampitude A(t) = A_det(t) + A_rand(t) - A_rand is a filtered random
-        % gaussian process
-        sig_A = 1e-1;
-        gr = conv(randn(1,N),exp(-(t/sig_A).^2));
-        Ar = cumsum(gr(1:N))/N;
+        % Deterministic Amplitude A(t) = sqrt(t+1)
         A = sqrt(t+1);
-        %A = max(abs(Ar))*sqrt(t+1) + Ar;
-        %A = 2*max(abs(Ar))*ones(1,N) + Ar;
         
         %%
         % Random phase phi(t) = phi_det(t) + phi_rand(t) - phi_rand is a filtered
         % random gaussian process
-        sig_p = 1e-1;
-        gr = conv(randn(1,N),exp(-(t/sig_p).^2));
-        phir = cumsum(gr(1:N))/N;
-        phi = 50*t + 5*t.^2;
+        ff = cumsum(randn(1,N));
+        IFr = ff./max(abs(ff));
+        IF = smooth(IFr,240);
+        phir = (cumsum(IF))/N;
+        phi = 50*t + 5/(2*pi)*cos(2*pi*t) + 10*phir';
         e = 1:K;c = zeros(1,K);
 
         for k=2:K
