@@ -53,17 +53,15 @@ for k=1:K
     err_imp = zeros(J,Nl,NM);
     err_spl = zeros(J,Nl,NM);
     err_pch = zeros(J,Nl,NM);
-    err_lin = zeros(J,Nl,NM);
 
     ratio_s = {'0.5','0.1','0.15','0.2'};
     alpha_b = 0.05/3;
     pval_ip = zeros(Nl,1);pval_is = zeros(Nl,1);pval_sp = zeros(Nl,1);
     pval_il = zeros(Nl,1);pval_sl = zeros(Nl,1);pval_pl = zeros(Nl,1);
     hval_ip = zeros(Nl,1);hval_is = zeros(Nl,1);hval_sp = zeros(Nl,1);
-    hval_il = zeros(Nl,1);hval_sl = zeros(Nl,1);hval_pl = zeros(Nl,1);
 
     times_imp = zeros(Nl,NM);times_decomp = times_imp; times_pch = times_imp;
-    times_spl = times_imp; times_lin = times_imp;
+    times_spl = times_imp;
 
     best_err_imp = zeros(J,1); best_err_spl = best_err_imp; best_err_pch = best_err_imp;
 
@@ -74,16 +72,13 @@ for k=1:K
     med_i = zeros(Nl,NM);
     med_p = zeros(Nl,NM);
     med_s = zeros(Nl,NM);
-    med_l = zeros(Nl,NM);
     iqr_i = zeros(Nl,NM);
     iqr_p = zeros(Nl,NM);
     iqr_s = zeros(Nl,NM);
-    iqr_l = zeros(Nl,NM);
 
     best_i = zeros(Nl,J);
     best_s = zeros(Nl,J);
     best_p = zeros(Nl,J);
-    best_l = zeros(Nl,J);
 
     N = 12e3;
     Signals = zeros(J,Nl,N);
@@ -101,30 +96,18 @@ for k=1:K
         err_imp(j,:,:) = St.Err_Imp(:,:,Ei)./max(St.True(1,:));
         err_spl(j,:,:) = St.Err_Spl(:,:,Ei)./max(St.True(1,:));
         err_pch(j,:,:) = St.Err_Pch(:,:,Ei)./max(St.True(1,:));
-        err_lin(j,:,:) = St.Err_Lin(:,:,Ei)./max(St.True(1,:));
 
     end
 
     for i=1:Nl
 
-        for j=1:NM
-            [pval_ip(i,j),hval_ip(i,j)] = signrank(err_imp(:,i,j),err_pch(:,i,j),'alpha',alpha_b);
-            [pval_is(i,j),hval_is(i,j)] = signrank(err_imp(:,i,j),err_spl(:,i,j),'alpha',alpha_b);
-            [pval_il(i,j),hval_il(i,j)] = signrank(err_imp(:,i,j),err_lin(:,i,j),'alpha',alpha_b);
-            [pval_sp(i,j),hval_sp(i,j)] = signrank(err_spl(:,i,j),err_pch(:,i,j),'alpha',alpha_b);
-            [pval_sl(i,j),hval_sl(i,j)] = signrank(err_spl(:,i,j),err_lin(:,i,j),'alpha',alpha_b);
-            [pval_pl(i,j),hval_pl(i,j)] = signrank(err_pch(:,i,j),err_lin(:,i,j),'alpha',alpha_b);
-
-        end
         med_i(i,:) = median(squeeze(err_imp(:,i,:)),1,'omitnan');
         med_s(i,:) = median(squeeze(err_spl(:,i,:)),1,'omitnan');
         med_p(i,:) = median(squeeze(err_pch(:,i,:)),1,'omitnan');
-        med_l(i,:) = median(squeeze(err_lin(:,i,:)),1,'omitnan');
 
         [~,best_i(i,:)] = min(squeeze(err_imp(:,i,:)),[],2);
         [~,best_s(i,:)] = min(squeeze(err_spl(:,i,:)),[],2);
         [~,best_p(i,:)] = min(squeeze(err_pch(:,i,:)),[],2);
-        [~,best_l(i,:)] = min(squeeze(err_lin(:,i,:)),[],2);
 
         for j=1:J
             best_err_imp(j) = squeeze(err_imp(j,i,best_i(i,j)));
@@ -136,7 +119,6 @@ for k=1:K
         times_decomp(i,:) = mean(St.Times_Decomp,'omitnan');
         times_pch(i,:) = mean(St.Times_Pch,'omitnan');
         times_spl(i,:) = mean(St.Times_Spl,'omitnan');
-        times_lin(i,:) = mean(St.Times_Lin,'omitnan');
 
         med_ib(i) = median(best_err_imp);
         med_sb(i) = median(best_err_spl);
@@ -150,7 +132,6 @@ for k=1:K
         times_decomp(i,:) = mean(St.Times_Decomp,'omitnan');
         times_pch(i,:) = mean(St.Times_Pch,'omitnan');
         times_spl(i,:) = mean(St.Times_Spl,'omitnan');
-        times_lin(i,:) = mean(St.Times_Lin,'omitnan');
 
         Err_Imp(i,:) = best_err_imp;
         Err_Spl(i,:) = best_err_spl;
