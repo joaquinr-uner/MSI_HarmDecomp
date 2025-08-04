@@ -1,7 +1,6 @@
 addpath(genpath(fullfile('..','harmonic_imputation')))
 drt = '...'; %Results folder
-drt = '/media/Datos/joaquinruiz/MissingDatSynth/MultiInt_Noise3'; %Results folder
-
+drt = '/media/Datos/joaquinruiz/MissingDatSynth/MultiInt_Noise3';
 N = 4000;
 fs = 4000;
 load(fullfile(drt,['Results_MissingDataMultiInt_200_10.mat']))
@@ -63,7 +62,7 @@ for k=1:length(vSNR)
         [~,best_pch(i,:)] = min(err_pch,[],2);
         [~,best_lin(i,:)] = min(err_lin,[],2);
 
-        figure(k)
+        figure(k+3)
         subplot(2,2,i)
         catM = discretize(best_imp(i,:),[1:NM+1],'categorical',ImpNames);
         histogram(catM,'DisplayOrder','descend')
