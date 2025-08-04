@@ -7,18 +7,19 @@ drt_r = '...'; % Result Directory
 severity = 'Normal';
 files = dir([drt '/Thorax/' severity]);
 
-startindex = readmatrix(fullfile(drt,'Tho_Indexes.csv'));
+startindex = readmatrix(fullfile(drt,'/Thorax/',severity,'0Tho_Indexes.csv'));
 
-files = files(3:end-1);
+files = files(4:end);
 J = length(files);
 opoptions = optimoptions(@fmincon,'Algorithm','interior-point','MaxFunctionEvaluations',100,'MaxIterations',30);
 ratio = [0.05:0.05:0.2];
 
-%ImpMethods = {'TLM'};
-%ImpNames = ['TLM'];
+%ImpMethods = {'TLM','LSE','DMD','GPR'};
+%ImpNames = {'TLM';'LSE';'DMD';'GPR'};
 
-ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA','LSW','EDMD'};
-ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA';'LSW';'EDD'];
+ImpMethods = {'TLM','LSE','DMD','GPR','ARIMAF','ARIMAB','TBATS','DDTFA','EDMD','LSW','DRAGO'};
+ImpNames = ['TLM';'LSE';'DMD';'GPR';'ARF';'ARB';'TBT';'TFA';'EDD';'LSW';'DGO'];
+
 ErrorCrit = {'mae','mse','rmse'};
 ErrorNames = ['mae';'mse';'rme'];
 NE = size(ErrorCrit,2);
@@ -31,7 +32,7 @@ I = length(ratio);
 
 for j=1:J
     name = files(j).name;
-    load(fullfile(drt,severity,name))
+    load(fullfile(drt,'Thorax',severity,name))
     fs = S.fs;
     T = 120;
     N = T*fs;
@@ -47,7 +48,7 @@ for j=1:J
     s = S.signal(ini:ini+N-1);
     s = s - mean(s);
     
-    [~,fh] = compute_sigma(s);
+    [~,fh] = compute_sigma(s,1);
 
     Th = N/fh;
     Mi = floor(0.9*Th);
@@ -66,8 +67,9 @@ for j=1:J
     %p_lsw = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     %p_tbats = struct('pn','/home/sentey/Dropbox/Github/harmonic_imputation/impute_methods/aux-functs');
     p_ddtfa = struct('fs',fs);
+    p_drago = struct();
     
-    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd};
+    params_imp = {p_tlm,p_lse,p_dmd,p_gpr,p_arimaf,p_arimab,p_tbats,p_ddtfa,p_lsw,p_edmd,p_drago};
 
     fprintf(['Processing ' name '. Start Index: ' num2str(ini) '\n'])
     t = 0:1/fs:(N-1)/fs;
@@ -80,7 +82,6 @@ for j=1:J
     S_Imp = zeros(I,NM,N);
     S_Spl = zeros(I,NM,N);
     S_Pch = zeros(I,NM,N);
-    S_Lin = zeros(I,NM,N);
 
     r_opt = zeros(I,NM);
     VL = zeros(I,Ni);
@@ -88,18 +89,15 @@ for j=1:J
     Err_Imp = zeros(I,NM,NE);
     Err_Spl = zeros(I,NM,NE);
     Err_Pch = zeros(I,NM,NE);
-    Err_Lin = zeros(I,NM,NE);
 
     Times_Imp = zeros(I,NM);
     Times_Decomp = zeros(I,NM);
     Times_Spl = zeros(I,NM);
     Times_Pch = zeros(I,NM);
-    Times_Lin = zeros(I,NM);
 
     BestI = zeros(I,1);
     BestS = zeros(I,1);
     BestP = zeros(I,1);
-    BestL = zeros(I,1);
     VLh = zeros(I,Ni);
     VSth = zeros(I,Ni);
     Ropt = zeros(I,1);
@@ -131,17 +129,16 @@ for j=1:J
         [s_imp,times_impj] = impute(s,sth,Lh,ImpMethods,params_imp,1);
         warning('on','all')
 
-        Sj_Imp = zeros(NM,N);Sj_Spl = Sj_Imp;Sj_Pch = Sj_Imp;Sj_Lin = Sj_Imp;
+        Sj_Imp = zeros(NM,N);Sj_Spl = Sj_Imp;Sj_Pch = Sj_Imp;
 
         R_opt = zeros(NM,1);
 
         Errj_Imp = zeros(NM,NE);
         Errj_Spl = zeros(NM,NE);
         Errj_Pch = zeros(NM,NE);
-        Errj_Lin = zeros(NM,NE);
 
         times_hdecomp = zeros(NM,1);times_splj = zeros(NM,1);
-        times_pchj = zeros(NM,1);times_linj = zeros(NM,1);
+        times_pchj = zeros(NM,1);
         for k=1:NM
             fprintf(['Running harmonic decomposition and interpolation on ' ImpMethods{k} ' result ...\n'])
             sk = s_imp(k,:)';
@@ -155,16 +152,13 @@ for j=1:J
             if isnan(ADk)
                 sk_spl = zeros(1,N);
                 sk_pch = zeros(1,N);
-                sk_lin = zeros(1,N);
 
                 Errj_Spl(k,:) = NaN;
                 Errj_Pch(k,:) = NaN;
-                Errj_Lin(k,:) = NaN;
 
                 t_hdecomp = NaN;
                 t_spl = NaN;
                 t_pch = NaN;
-                t_lin = NaN;
             else
                 tic
                 sk_spl = harm_int(ADk,phiDk,sth,Lh,'spline',sk,trendk);
@@ -174,23 +168,15 @@ for j=1:J
                 sk_pch = harm_int(ADk,phiDk,sth,Lh,'pchip',sk,trendk);
                 t_pch = toc;
                 Errj_Pch(k,:) = compute_errors(tr,sk_pch,sth,Lh,ErrorCrit);
-
-                tic
-                sk_lin = harm_int(ADk,phiDk,sth,Lh,'lin',sk,trendk);
-                t_lin = toc;
-                Errj_Lin(k,:) = compute_errors(tr,sk_lin,sth,Lh,ErrorCrit);
-
             end
             Sj_Imp(k,:) = sk;
             Sj_Spl(k,:) = sk_spl;
             Sj_Pch(k,:) = sk_pch;
-            Sj_Lin(k,:) = sk_lin;
             R_opt(k) = r_optjk;
 
             times_hdecomp(k) = t_hdecomp;
             times_splj(k) = t_spl;
             times_pchj(k) = t_pch;
-            times_linj(k) = t_lin;
         end
         %fprintf(['harmonic decomposition and interpolation completed.... MSE_I: ' num2str(Tmse_bestj) '. MSE_S: ' num2str(Tmse_splj) '. MSE_P: ' num2str(Tmse_pchj) '\n'])
 
@@ -201,14 +187,12 @@ for j=1:J
         S_Imp(i,:,:) = Sj_Imp;
         S_Spl(i,:,:) = Sj_Spl;
         S_Pch(i,:,:) = Sj_Pch;
-        S_Lin(i,:,:) = Sj_Lin;
 
         r_opt(i,:) = R_opt;
 
         Err_Imp(i,:,:) = Errj_Imp;
         Err_Spl(i,:,:) = Errj_Spl;
         Err_Pch(i,:,:) = Errj_Pch;
-        Err_Lin(i,:,:) = Errj_Lin;
 
         [~,BestI(i,:)] = min(Errj_Imp(:,1));
 
@@ -216,21 +200,17 @@ for j=1:J
 
         [~,BestP(i,:)] = min(Errj_Pch(:,1));
 
-        [~,BestL(i,:)] = min(Errj_Lin(:,1));
-
         fprintf(['Best Imputation Method: ' ImpMethods{BestI(i,:)} '. Best Imputation+Pchip_Interp Method: ' ImpMethods{BestP(i,:)} '\n'])
         Times_Decomp(i,:) = times_hdecomp;
         Times_Imp(i,:) = times_impj;
         Times_Spl(i,:) = times_splj;
         Times_Pch(i,:) = times_pchj;
-        Times_Lin(i,:) = times_linj;
     end
-    St = struct('Err_Imp',Err_Imp,'Err_Spl',Err_Spl,'Err_Pch',Err_Pch,'Err_Lin',...
-        Err_Lin,'True',TRUE,'S_MS',S_MS,'VL',VL,'St',St,'S_Imp',S_Imp,...
-        'S_Spl',S_Spl,'S_Pch',S_Pch,'S_Lin',S_Lin,'ImpNames',ImpNames, ...
+    St = struct('Err_Imp',Err_Imp,'Err_Spl',Err_Spl,'Err_Pch',Err_Pch,...
+        'True',TRUE,'S_MS',S_MS,'VL',VL,'St',St,'S_Imp',S_Imp,...
+        'S_Spl',S_Spl,'S_Pch',S_Pch,'ImpNames',ImpNames, ...
         'Metrics',ErrorNames,'Times_Imp',Times_Imp,'Times_Decomp',Times_Decomp,...
         'Times_Spl',Times_Spl,'Times_Pch',Times_Pch,...
-        'Times_Lin',Times_Lin,'BestI',BestI,'BestS',BestS,'BestP',BestP,...
-        'BestL',BestL);
+        'BestI',BestI,'BestS',BestS,'BestP',BestP);
     save(fullfile(drt_r,severity,['Results_MissingDataTHO_' name '.mat']),'St')
 end
