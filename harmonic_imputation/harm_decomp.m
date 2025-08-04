@@ -164,7 +164,7 @@ if (max(C(:))<=0.5*N && sum(~isnan(C(:))))
         r_opt = order_optK(x,r_max,A,phi,crit,crit_params);
     end
 
-    for k=1:k
+    for k=1:K
         ck = C(k,:);
         [ADk,phiDk] = extract_harmonics(F,sF,ck,b,b,r_opt(k));
         AD = [AD; ADk];
