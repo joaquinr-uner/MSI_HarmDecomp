@@ -1,5 +1,6 @@
 addpath(genpath(fullfile('..','harmonic_imputation')))
-drt = '/media/Datos/joaquinruiz/MissingDatSynth/MultiInt_Noise2';
+drt = '...'; %Results folder
+drt = '/media/Datos/joaquinruiz/MissingDatSynth/MultiInt_Noise3'; %Results folder
 
 N = 4000;
 fs = 4000;
@@ -45,21 +46,7 @@ for k=1:length(vSNR)
         err_lin = S.Err_Lin(:,:,Ei);
 
         err = {err_imp,err_spl,err_pch,err_lin};
-        %figure(i)
-        %boxplotGroup(err,'PrimaryLabels',{'Imp','Spl','Pch','Lin'},'SecondaryLabels',ImpNames)
-        %title(ErroCrit{Ei})
-        %hold off
 
-
-        for j=1:NM
-            [pval_ip(i,j),hval_ip(i,j)] = signrank(err_imp(:,j),err_pch(:,j),'alpha',alpha_b);
-            [pval_is(i,j),hval_is(i,j)] = signrank(err_imp(:,j),err_spl(:,j),'alpha',alpha_b);
-            %[pval_il(i,j),hval_il(i,j)] = signrank(err_imp(:,j),err_lin(:,j),'alpha',alpha_b);
-            [pval_sp(i,j),hval_sp(i,j)] = signrank(err_spl(:,j),err_pch(:,j),'alpha',alpha_b);
-            %[pval_sl(i,j),hval_sl(i,j)] = signrank(err_spl(:,j),err_lin(:,j),'alpha',alpha_b);
-            %[pval_pl(i,j),hval_pl(i,j)] = signrank(err_pch(:,j),err_lin(:,j),'alpha',alpha_b);
-
-        end
         med_imp(i,:) = median(err_imp,1,'omitnan');
         med_spl(i,:) = median(err_spl,1,'omitnan');
         med_pch(i,:) = median(err_pch,1,'omitnan');
@@ -110,22 +97,6 @@ for k=1:length(vSNR)
         set(hax(i),'Position',PosBox(i,:))
 
         ylabel(ErrorCrit{Ei})
-        %text(1,BP(i,k),'|','Color',edgec)
-        %text(1.95,BP(i,k),'|','Color',edgec)
-        %line([1.01,1.96],[BP(i,k),BP(i,k)],'Color',edgec)
-        %text(1.45,BP(i,k)+0.02*(YLim(i,2,k)-YLim(i,1,k)),'*','FontSize',16)
-
-        %text(2.01,BP(i,k),'|','Color',edgec)
-        %text(2.96,BP(i,k),'|','Color',edgec)
-        %line([2.03,2.97],[BP(i,k),BP(i,k)],'Color',edgec)
-        %text(2.45,BP(i,k)+0.02*(YLim(i,2,k)-YLim(i,1,k)),'*','FontSize',16)
-
-        %text(0.99,UP(i,k),'|','Color',edgec)
-        %text(2.99,UP(i,k),'|','Color',edgec)
-        %line([1.01,3],[UP(i,k),UP(i,k)],'Color',edgec)
-        %text(1.96,UP(i,k)+0.02*(YLim(i,2,k)-YLim(i,1,k)),'*','FontSize',16)
-
-        %ylim(YLim(i,:,k))
     end
 end
 
